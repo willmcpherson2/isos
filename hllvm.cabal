@@ -1,0 +1,21 @@
+cabal-version:      3.0
+name:               hllvm
+version:            0.1.0.0
+license:            MIT
+license-file:       LICENSE
+author:             William McPherson
+maintainer:         willmcpherson2@gmail.com
+build-type:         Simple
+
+common common
+  default-language: GHC2024
+  ghc-options:      -Wall
+  cc-options:       -Wall
+
+executable hllvm
+  import:           common
+  main-is:          Main.hs
+  other-modules:
+  build-depends:    base ^>=4.20.0.0
+                    , inline-c-cpp ^>=0.5.0.2
+  hs-source-dirs:   app
