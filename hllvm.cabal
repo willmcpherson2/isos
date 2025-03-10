@@ -20,3 +20,4 @@ executable hllvm
                     , inline-c-cpp ^>=0.5.0.2
   hs-source-dirs:   app
   c-sources:        app/state.cpp
+  extra-libraries:  LLVM-19

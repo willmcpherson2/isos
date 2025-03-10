@@ -1,9 +1,31 @@
+#include <llvm/IR/LLVMContext.h>
+#include <llvm/IR/Module.h>
+#include <llvm/Target/TargetMachine.h>
+
+enum Error {
+  None,
+  NoTargetTriple,
+  InvalidModule,
+  UnableToOpenOutput,
+  UnableToEmitObject,
+  LinkFailed,
+};
+
 class State {
 public:
-  State() {}
-  int get();
-  void set(int);
+  State();
+  void generate();
+  void output();
+  void printError();
+
+  Error error = None;
+  std::string message;
 
 private:
-  int n;
+  llvm::Module initMod();
+  std::unique_ptr<llvm::TargetMachine> initTargetMachine();
+
+  llvm::LLVMContext context;
+  llvm::Module mod;
+  std::unique_ptr<llvm::TargetMachine> targetMachine;
 };

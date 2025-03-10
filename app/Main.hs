@@ -4,8 +4,10 @@
 
 module Main where
 
-import Foreign.Ptr (Ptr)
+import Control.Monad (when)
+import Foreign (Ptr)
 import Language.C.Inline.Cpp qualified as C
+import System.Exit (ExitCode (..), exitWith)
 
 data State
 
@@ -13,11 +15,21 @@ C.context $ C.cppCtx <> C.cppTypePairs [("State", [t|State|])]
 
 C.include "state.h"
 
+check :: Ptr State -> IO ()
+check state = do
+  code <- fromEnum <$> [C.exp| int { $(State* state)->error } |]
+  when (code > 0) $ do
+    [C.exp| void { $(State* state)->printError() } |]
+    exitWith $ ExitFailure code
+
 main :: IO ()
 main = do
-  state <- [C.exp| State* { new State() } |] :: IO (Ptr State)
-  n1 <- [C.exp| int { $(State* state)->get() } |]
-  print n1
-  [C.exp| void { $(State* state)->set(1) } |]
-  n2 <- [C.exp| int { $(State* state)->get() } |]
-  print n2
+  state <- [C.exp| State* { new State() } |]
+
+  [C.exp| void { $(State* state)->generate() } |]
+  check state
+
+  [C.exp| void { $(State* state)->output() } |]
+  check state
+
+  putStrLn "success"
