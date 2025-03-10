@@ -118,20 +118,21 @@ void State::output() {
   }
 
   llvm::legacy::PassManager pass;
-  if (targetMachine->addPassesToEmitFile(
-        pass, objectFile, nullptr, llvm::CodeGenFileType::ObjectFile
-      )) {
+  bool emitPassOk = targetMachine->addPassesToEmitFile(
+    pass, objectFile, nullptr, llvm::CodeGenFileType::ObjectFile
+  );
+  if (emitPassOk) {
     error = UnableToEmitObjectFile;
     return;
   }
   pass.run(mod);
   objectFile.close();
 
-  int result = std::system("cc -o main main.o");
-  if (result != 0) {
+  int compilerExitCode = std::system("cc -o main main.o");
+  if (compilerExitCode != 0) {
     std::stringstream stream;
     stream << "process exited with code ";
-    stream << result;
+    stream << compilerExitCode;
     message = stream.str();
     error = LinkFailed;
     return;
