@@ -6,8 +6,8 @@ enum Error {
   None,
   NoTargetTriple,
   InvalidModule,
-  UnableToOpenOutput,
-  UnableToEmitObject,
+  UnableToOpenObjectFile,
+  UnableToEmitObjectFile,
   LinkFailed,
 };
 

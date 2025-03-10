@@ -32,7 +32,7 @@ llvm::Module State::initMod() {
   llvm::InitializeAllTargetMCs();
   llvm::InitializeAllAsmPrinters();
 
-  return llvm::Module("output", context);
+  return llvm::Module("main", context);
 }
 
 std::unique_ptr<llvm::TargetMachine> State::initTargetMachine() {
@@ -110,24 +110,24 @@ void State::output() {
   mpm.run(mod, mam);
 
   std::error_code ec;
-  llvm::raw_fd_ostream outputFile("output.o", ec, llvm::sys::fs::OF_None);
+  llvm::raw_fd_ostream objectFile("main.o", ec, llvm::sys::fs::OF_None);
   if (ec) {
     message = ec.message();
-    error = UnableToOpenOutput;
+    error = UnableToOpenObjectFile;
     return;
   }
 
   llvm::legacy::PassManager pass;
   if (targetMachine->addPassesToEmitFile(
-        pass, outputFile, nullptr, llvm::CodeGenFileType::ObjectFile
+        pass, objectFile, nullptr, llvm::CodeGenFileType::ObjectFile
       )) {
-    error = UnableToEmitObject;
+    error = UnableToEmitObjectFile;
     return;
   }
   pass.run(mod);
-  outputFile.close();
+  objectFile.close();
 
-  int result = std::system("cc -o output output.o");
+  int result = std::system("cc -o main main.o");
   if (result != 0) {
     std::stringstream stream;
     stream << "process exited with code ";
