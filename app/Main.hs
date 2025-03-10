@@ -1,16 +1,23 @@
+{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE TemplateHaskell #-}
 
 module Main where
 
+import Foreign.Ptr (Ptr)
 import Language.C.Inline.Cpp qualified as C
 
-C.context C.cppCtx
+data State
 
-C.include "fac.h"
+C.context $ C.cppCtx <> C.cppTypePairs [("State", [t|State|])]
+
+C.include "state.h"
 
 main :: IO ()
 main = do
-  let n = 5
-  let m = [C.pure| int { fac($(int n)) } |]
-  print m
+  state <- [C.exp| State* { new State() } |] :: IO (Ptr State)
+  n1 <- [C.exp| int { $(State* state)->get() } |]
+  print n1
+  [C.exp| void { $(State* state)->set(1) } |]
+  n2 <- [C.exp| int { $(State* state)->get() } |]
+  print n2
