@@ -1,35 +1,29 @@
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE QuasiQuotes #-}
-{-# LANGUAGE TemplateHaskell #-}
+module Main (main) where
 
-module Main where
-
-import Control.Monad (when)
-import Foreign (Ptr)
-import Language.C.Inline.Cpp qualified as C
-import System.Exit (ExitCode (..), exitWith)
-
-data State
-
-C.context $ C.cppCtx <> C.cppTypePairs [("State", [t|State|])]
-
-C.include "state.h"
-
-check :: Ptr State -> IO ()
-check state = do
-  code <- fromEnum <$> [C.exp| int { $(State* state)->error } |]
-  when (code > 0) $ do
-    [C.exp| void { $(State* state)->printError() } |]
-    exitWith $ ExitFailure code
+import Generate
+import Lir
 
 main :: IO ()
 main = do
-  state <- [C.exp| State* { new State() } |]
-
-  [C.exp| void { $(State* state)->generate() } |]
-  check state
-
-  [C.exp| void { $(State* state)->output() } |]
-  check state
-
-  putStrLn "success"
+  let idTrueProg =
+        Prog
+          -- main = id True
+          [ App 0 Nothing [Def 2, Def 1],
+            Call 1 (Var 0),
+            Return (Var 1)
+          ]
+          [ -- False
+            Data 0 0,
+            -- True
+            Data 0 1,
+            -- id x = x
+            Fun
+              1
+              [ Load 0 Self 0,
+                Free Self,
+                Call 1 (Var 0),
+                Return (Var 1)
+              ]
+          ]
+  generate idTrueProg
+  pure ()

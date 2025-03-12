@@ -15,7 +15,7 @@ common common
 executable hllvm
   import:           common
   main-is:          Main.hs
-  other-modules:    Lir
+  other-modules:    Lir, Generate
   build-depends:    base ^>=4.20.0.0
                     , inline-c-cpp ^>=0.5.0.2
   hs-source-dirs:   app
