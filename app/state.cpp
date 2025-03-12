@@ -153,5 +153,5 @@ void State::printError() {
     "Failed to invoke the C compiler on your machine",
   };
 
-  std::cout << "error: " << info[error] << ": " << message << std::endl;
+  llvm::errs() << "error: " << info[error] << ": " << message << "\n";
 }
