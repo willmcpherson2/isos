@@ -16,6 +16,7 @@ public:
   State();
   void generate();
   void output();
+  void print();
   void printError();
 
   Error error = None;

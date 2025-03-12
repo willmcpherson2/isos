@@ -139,6 +139,10 @@ void State::output() {
   }
 }
 
+void State::print() {
+  mod.print(llvm::outs(), nullptr);
+}
+
 void State::printError() {
   static const char *info[] = {
     "No error",
