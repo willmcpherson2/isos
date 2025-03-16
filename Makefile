@@ -1,15 +1,22 @@
 CXX = clang++
 TEST = test
-OUTPUT = main
 FLAGS = -g -fsanitize=address,undefined,leak
 LDFLAGS = -lLLVM-19
 SRC = app
 SRCS = $(SRC)/test.cpp $(SRC)/state.cpp
 
-.PHONY: all
-all: $(TEST)
+CC = clang
+RT = rt.o
+RT_FLAGS = -02
+RT_SRC = rt
+RT_SRCS = $(RT_SRC)/rt.c
 
-$(TEST): $(SRCS)
+OUTPUT = main
+
+$(RT): $(RT_SRCS)
+	$(CC) -c -o $@ $(RT_FLAGS) $(RT_SRCS)
+
+$(TEST): $(SRCS) $(RT)
 	$(CXX) -o $@ $(FLAGS) $(SRCS) $(LDFLAGS)
 
 .PHONY: run
@@ -18,4 +25,4 @@ run: $(TEST)
 
 .PHONY: clean
 clean:
-	rm -f $(TEST) $(OUTPUT)
+	rm -f $(TEST) $(RT) $(OUTPUT)

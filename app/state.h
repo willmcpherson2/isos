@@ -62,5 +62,5 @@ private:
   llvm::Function *fun = nullptr;
   std::optional<llvm::IRBuilder<>> builder;
   std::unordered_map<int, llvm::GlobalVariable *> globals;
-  std::unordered_map<int, llvm::Value *> values;
+  std::unordered_map<int, llvm::AllocaInst *> locals;
 };

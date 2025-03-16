@@ -94,7 +94,7 @@ llvm::Function *State::initNoopFun() {
   llvm::BasicBlock *block = llvm::BasicBlock::Create(context, "entry", fun);
   builder.emplace(block);
 
-  llvm::Value *arg = fun->getArg(0);
+  llvm::Argument *arg = fun->getArg(0);
   builder->CreateRet(arg);
 
   return fun;
@@ -115,59 +115,15 @@ llvm::Function *State::initAppNewFun() {
   auto name = "app_new";
 
   llvm::FunctionType *funType = llvm::FunctionType::get(
-    termType,
-    {termType,
+    llvm::Type::getVoidTy(context),
+    {llvm::PointerType::get(context, 0),
      llvm::Type::getInt32Ty(context),
      llvm::PointerType::get(context, 0)},
     false
   );
-  llvm::Function *fun =
-    llvm::Function::Create(funType, llvm::Function::PrivateLinkage, name, mod);
-
-  llvm::BasicBlock *block = llvm::BasicBlock::Create(context, "entry", fun);
-  llvm::IRBuilder<> builder(block);
-
-  llvm::Value *funArg = fun->getArg(0);
-  llvm::Value *lengthArg = fun->getArg(1);
-  llvm::Value *argsArg = fun->getArg(2);
-
-  llvm::DataLayout dataLayout(&mod);
-  llvm::TypeSize termTypeSize = dataLayout.getTypeAllocSize(termType);
-  llvm::Value *sizeOfTerm = builder.getInt32(termTypeSize);
-  llvm::Value *size = builder.CreateMul(lengthArg, sizeOfTerm);
-
-  llvm::FunctionType *mallocType = llvm::FunctionType::get(
-    llvm::PointerType::get(context, 0), {builder.getInt32Ty()}, false
+  return llvm::Function::Create(
+    funType, llvm::Function::ExternalLinkage, name, mod
   );
-  llvm::FunctionCallee mallocFun =
-    mod.getOrInsertFunction("malloc", mallocType);
-  llvm::Value *allocatedMemory = builder.CreateCall(mallocFun, {size});
-
-  llvm::Value *resultAlloca = builder.CreateAlloca(termType, nullptr);
-  builder.CreateStore(funArg, resultAlloca);
-
-  llvm::Value *argsFieldPtr =
-    builder.CreateStructGEP(termType, resultAlloca, 1);
-
-  builder.CreateStore(allocatedMemory, argsFieldPtr);
-
-  llvm::FunctionType *memcpyType = llvm::FunctionType::get(
-    llvm::PointerType::get(context, 0),
-    {llvm::PointerType::get(context, 0),
-     llvm::PointerType::get(context, 0),
-     builder.getInt32Ty()},
-    false
-  );
-  llvm::FunctionCallee memcpyFun =
-    mod.getOrInsertFunction("memcpy", memcpyType);
-
-  builder.CreateCall(memcpyFun, {allocatedMemory, argsArg, size});
-
-  llvm::Value *finalTerm = builder.CreateLoad(termType, resultAlloca);
-
-  builder.CreateRet(finalTerm);
-
-  return fun;
 }
 
 void State::main() {
@@ -181,7 +137,7 @@ void State::main() {
   llvm::BasicBlock *block = llvm::BasicBlock::Create(context, "entry", fun);
   builder.emplace(block);
 
-  values.clear();
+  locals.clear();
 }
 
 void State::function(int symbol, int arity) {
@@ -196,9 +152,11 @@ void State::function(int symbol, int arity) {
   llvm::BasicBlock *block = llvm::BasicBlock::Create(context, "entry", fun);
   builder.emplace(block);
 
-  llvm::Value *arg = fun->getArg(0);
-  values.clear();
-  values.insert({0, arg});
+  llvm::Argument *arg = fun->getArg(0);
+  llvm::AllocaInst *argAlloca = builder->CreateAlloca(termType, nullptr);
+  builder->CreateStore(arg, argAlloca);
+  locals.clear();
+  locals.insert({0, argAlloca});
 
   auto dataName = "data_" + std::to_string(symbol);
 
@@ -239,7 +197,7 @@ void State::data(int symbol, int arity) {
   };
   llvm::Constant *termInit = llvm::ConstantStruct::get(termType, fieldValues);
 
-  auto global = new llvm::GlobalVariable(
+  auto *global = new llvm::GlobalVariable(
     mod,                               // Module
     termType,                          // Type
     true,                              // isConstant
@@ -258,81 +216,92 @@ void State::data(int symbol, int arity) {
 void State::load(int name, int symbol) {
   llvm::GlobalVariable *global = globals[symbol];
 
-  llvm::AllocaInst *allocaValue = builder->CreateAlloca(termType, nullptr);
-  llvm::LoadInst *globalValue = builder->CreateLoad(termType, global);
-  builder->CreateStore(globalValue, allocaValue);
-  llvm::Value *value = builder->CreateLoad(termType, allocaValue);
+  llvm::AllocaInst *termAlloca = builder->CreateAlloca(termType, nullptr);
+  llvm::LoadInst *termLoad = builder->CreateLoad(termType, global);
+  builder->CreateStore(termLoad, termAlloca);
 
-  values.insert({name, value});
+  locals.insert({name, termAlloca});
 }
 
 void State::appNew(int name, int var, int length, int *args) {
-  llvm::Value *varValue = values[var];
+  llvm::AllocaInst *term = locals[var];
 
-  llvm::ConstantInt *lengthValue =
+  llvm::LoadInst *termLoad = builder->CreateLoad(termType, term);
+  llvm::AllocaInst *termAlloca = builder->CreateAlloca(termType, nullptr);
+  builder->CreateStore(termLoad, termAlloca);
+
+  llvm::ConstantInt *lengthConstant =
     llvm::ConstantInt::get(llvm::Type::getInt32Ty(context), length);
 
   llvm::ArrayType *argsType = llvm::ArrayType::get(termType, length);
-  llvm::AllocaInst *argsValue = builder->CreateAlloca(argsType, nullptr);
+  llvm::AllocaInst *argsAlloca = builder->CreateAlloca(argsType, nullptr);
   for (int i = 0; i < length; ++i) {
     int arg = args[i];
-    llvm::Value *argValue = values[arg];
-
-    llvm::Value *element = builder->CreateGEP(
+    llvm::AllocaInst *argLocal = locals[arg];
+    llvm::LoadInst *argLoad = builder->CreateLoad(termType, argLocal);
+    llvm::Value *argGep = builder->CreateGEP(
       argsType,
-      argsValue,
+      argsAlloca,
       {llvm::ConstantInt::get(llvm::Type::getInt32Ty(context), 0),
        llvm::ConstantInt::get(llvm::Type::getInt32Ty(context), i)}
     );
-    builder->CreateStore(argValue, element);
+    builder->CreateStore(argLoad, argGep);
   }
 
   std::vector<llvm::Value *> argValues;
-  argValues.push_back(varValue);
-  argValues.push_back(lengthValue);
-  argValues.push_back(argsValue);
-  llvm::Value *value = builder->CreateCall(appNewFun, argValues);
+  argValues.push_back(termAlloca);
+  argValues.push_back(lengthConstant);
+  argValues.push_back(argsAlloca);
+  builder->CreateCall(appNewFun, argValues);
 
-  values.insert({name, value});
+  locals.insert({name, termAlloca});
 }
 
 void State::call(int name, int var) {
-  llvm::Value *varValue = values[var];
+  llvm::AllocaInst *term = locals[var];
 
-  llvm::Value *fun = builder->CreateExtractValue(varValue, 0);
-  llvm::Value *value = builder->CreateCall(funType, fun, {varValue});
+  llvm::LoadInst *termLoad = builder->CreateLoad(termType, term);
+  llvm::Value *fun = builder->CreateExtractValue(termLoad, 0);
+  llvm::CallInst *result = builder->CreateCall(funType, fun, {termLoad});
+  llvm::AllocaInst *resultAlloca = builder->CreateAlloca(termType, nullptr);
+  builder->CreateStore(result, resultAlloca);
 
-  values.insert({name, value});
+  locals.insert({name, resultAlloca});
 }
 
 void State::free(int var) {
-  llvm::Value *varValue = values[var];
+  llvm::AllocaInst *term = locals[var];
 
-  llvm::Value *argsField = builder->CreateExtractValue(varValue, 1);
+  llvm::LoadInst *termLoad = builder->CreateLoad(termType, term);
+  llvm::Value *argsField = builder->CreateExtractValue(termLoad, 1);
   builder->CreateCall(freeFun, {argsField});
 }
 
 void State::index(int name, int var, int i) {
-  llvm::Value *varValue = values[var];
+  llvm::AllocaInst *term = locals[var];
 
-  llvm::Value *argsField = builder->CreateExtractValue(varValue, 1);
+  llvm::LoadInst *termLoad = builder->CreateLoad(termType, term);
+  llvm::Value *argsField = builder->CreateExtractValue(termLoad, 1);
   llvm::ConstantInt *argIndex =
     llvm::ConstantInt::get(llvm::Type::getInt32Ty(context), i);
   llvm::Value *argPtr = builder->CreateGEP(termType, argsField, argIndex);
+  llvm::LoadInst *arg = builder->CreateLoad(termType, argPtr);
+  llvm::AllocaInst *argAlloca = builder->CreateAlloca(termType, nullptr);
+  builder->CreateStore(arg, argAlloca);
 
-  llvm::Value *value = builder->CreateLoad(termType, argPtr);
-
-  values.insert({name, value});
+  locals.insert({name, argAlloca});
 }
 
 void State::ret(int var) {
-  llvm::Value *varValue = values[var];
-  builder->CreateRet(varValue);
+  llvm::AllocaInst *term = locals[var];
+  llvm::LoadInst *termLoad = builder->CreateLoad(termType, term);
+  builder->CreateRet(termLoad);
 }
 
 void State::retSymbol(int var) {
-  llvm::Value *varValue = values[var];
-  llvm::Value *symbol = builder->CreateExtractValue(varValue, 2);
+  llvm::AllocaInst *term = locals[var];
+  llvm::LoadInst *termLoad = builder->CreateLoad(termType, term);
+  llvm::Value *symbol = builder->CreateExtractValue(termLoad, 2);
   builder->CreateRet(symbol);
 }
 
@@ -376,7 +345,7 @@ void State::write() {
   pass.run(mod);
   objectFile.close();
 
-  int compilerExitCode = std::system("cc -o main main.o");
+  int compilerExitCode = std::system("cc -flto -o main rt.o main.o");
   if (compilerExitCode != 0) {
     std::stringstream stream;
     stream << "process exited with code ";
