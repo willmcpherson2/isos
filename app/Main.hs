@@ -7,23 +7,27 @@ main :: IO ()
 main = do
   let idTrueProg =
         Prog
-          -- main = id True
-          [ App 0 Nothing [Def 2, Def 1],
-            Call 1 (Var 0),
-            Return (Var 1)
-          ]
           [ -- False
             Data 0 0,
             -- True
-            Data 0 1,
-            -- id x = x
+            Data 1 0
+          ]
+          [ -- id x = x
             Fun
+              2
               1
-              [ Load 0 Self 0,
-                Free Self,
-                Call 1 (Var 0),
-                Return (Var 1)
+              [ Index 1 0 0, -- 1 = 0[0]
+                Free 0, -- free(0)
+                Call 2 1, -- 2 = 1()
+                Return 2 -- return 2
               ]
+          ]
+          -- main = id True
+          [ Load 1 2, -- 1 = id
+            Load 2 1, -- 2 = True
+            AppNew 3 1 [2], -- 3 = appNew(1, 2)
+            Call 4 3, -- 4 = 3()
+            Return 4 -- return 4
           ]
   generate idTrueProg
   pure ()

@@ -1,4 +1,5 @@
 /dist-newstyle
 /.direnv
+/test
 /main
 /main.o

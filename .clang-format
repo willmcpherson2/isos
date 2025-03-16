@@ -2,3 +2,6 @@ BinPackArguments: false
 BinPackParameters: false
 AlignAfterOpenBracket: BlockIndent
 ContinuationIndentWidth: 2
+ConstructorInitializerAllOnOneLineOrOnePerLine: true
+AllowAllParametersOfDeclarationOnNextLine: false
+ConstructorInitializerIndentWidth: 2

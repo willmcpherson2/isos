@@ -26,9 +26,4 @@ check state = do
 generate :: Prog -> IO ()
 generate prog = do
   state <- [C.exp| State* { new State() } |]
-
-  [C.exp| void { $(State* state)->generate() } |]
-  check state
-
-  [C.exp| void { $(State* state)->output() } |]
   check state
