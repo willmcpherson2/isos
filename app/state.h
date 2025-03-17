@@ -52,6 +52,8 @@ private:
   llvm::Function *initFreeFun();
   llvm::Function *initAppNewFun();
 
+  void addGlobal(std::string name, llvm::Function *fun, int symbol, int arity);
+
   llvm::LLVMContext context;
   llvm::Module mod;
   std::unique_ptr<llvm::TargetMachine> targetMachine;

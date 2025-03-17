@@ -16,37 +16,12 @@ void State::main() {
 
 void State::data(int symbol, int arity) {
   auto name = "data_" + std::to_string(symbol);
-
-  std::vector<llvm::Constant *> fieldValues = {
-    noopFun,                                                            // fun
-    llvm::ConstantPointerNull::get(llvm::PointerType::get(context, 0)), // args
-    llvm::ConstantInt::get(llvm::Type::getInt32Ty(context), symbol), // symbol
-    llvm::ConstantInt::get(llvm::Type::getInt16Ty(context), arity),  // length
-    llvm::ConstantInt::get(llvm::Type::getInt16Ty(context), arity)   // capacity
-  };
-  llvm::Constant *termInit = llvm::ConstantStruct::get(termType, fieldValues);
-
-  auto *global = new llvm::GlobalVariable(
-    mod,                               // Module
-    termType,                          // Type
-    true,                              // isConstant
-    llvm::GlobalValue::PrivateLinkage, // Linkage
-    termInit,                          // Initializer
-    name,                              // Name
-    nullptr,                           // InsertBefore
-    llvm::GlobalValue::NotThreadLocal, // ThreadLocalMode
-    0,                                 // AddressSpace
-    false                              // isExternallyInitialized
-  );
-
-  globals.insert({symbol, global});
+  addGlobal(name, noopFun, symbol, arity);
 }
 
 void State::function(int symbol, int arity) {
   auto funName = "fun_" + std::to_string(symbol);
 
-  llvm::FunctionType *funType =
-    llvm::FunctionType::get(termType, {termType}, false);
   llvm::Function *fun = llvm::Function::Create(
     funType, llvm::Function::PrivateLinkage, funName, mod
   );
@@ -60,31 +35,8 @@ void State::function(int symbol, int arity) {
   locals.clear();
   locals.insert({0, argAlloca});
 
-  auto dataName = "data_" + std::to_string(symbol);
-
-  std::vector<llvm::Constant *> fieldValues = {
-    fun,                                                                // fun
-    llvm::ConstantPointerNull::get(llvm::PointerType::get(context, 0)), // args
-    llvm::ConstantInt::get(llvm::Type::getInt32Ty(context), symbol), // symbol
-    llvm::ConstantInt::get(llvm::Type::getInt16Ty(context), arity),  // length
-    llvm::ConstantInt::get(llvm::Type::getInt16Ty(context), arity)   // capacity
-  };
-  llvm::Constant *termInit = llvm::ConstantStruct::get(termType, fieldValues);
-
-  auto global = new llvm::GlobalVariable(
-    mod,                               // Module
-    termType,                          // Type
-    true,                              // isConstant
-    llvm::GlobalValue::PrivateLinkage, // Linkage
-    termInit,                          // Initializer
-    dataName,                          // Name
-    nullptr,                           // InsertBefore
-    llvm::GlobalValue::NotThreadLocal, // ThreadLocalMode
-    0,                                 // AddressSpace
-    false                              // isExternallyInitialized
-  );
-
-  globals.insert({symbol, global});
+  auto name = "data_" + std::to_string(symbol);
+  addGlobal(name, fun, symbol, arity);
 }
 
 void State::load(int name, int symbol) {
@@ -177,4 +129,35 @@ void State::appNew(int name, int var, int length, int *args) {
   builder->CreateCall(appNewFun, argValues);
 
   locals.insert({name, termAlloca});
+}
+
+void State::addGlobal(
+  std::string name,
+  llvm::Function *fun,
+  int symbol,
+  int arity
+) {
+  std::vector<llvm::Constant *> fieldValues = {
+    fun,                                                                // fun
+    llvm::ConstantPointerNull::get(llvm::PointerType::get(context, 0)), // args
+    llvm::ConstantInt::get(llvm::Type::getInt32Ty(context), symbol), // symbol
+    llvm::ConstantInt::get(llvm::Type::getInt16Ty(context), arity),  // length
+    llvm::ConstantInt::get(llvm::Type::getInt16Ty(context), arity)   // capacity
+  };
+  llvm::Constant *termInit = llvm::ConstantStruct::get(termType, fieldValues);
+
+  auto *global = new llvm::GlobalVariable(
+    mod,                               // Module
+    termType,                          // Type
+    true,                              // isConstant
+    llvm::GlobalValue::PrivateLinkage, // Linkage
+    termInit,                          // Initializer
+    name,                              // Name
+    nullptr,                           // InsertBefore
+    llvm::GlobalValue::NotThreadLocal, // ThreadLocalMode
+    0,                                 // AddressSpace
+    false                              // isExternallyInitialized
+  );
+
+  globals.insert({symbol, global});
 }
