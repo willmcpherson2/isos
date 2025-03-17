@@ -16,18 +16,18 @@ main = do
             Fun
               2
               1
-              [ Index 1 0 0, -- 1 = 0[0]
-                Free 0, -- free(0)
+              [ LoadArg 1 0 0, -- 1 = 0[0]
+                FreeArgs 0, -- free(0)
                 Call 2 1, -- 2 = 1()
-                Return 2 -- return 2
+                ReturnTerm 2 -- return 2
               ]
           ]
           -- main = id True
-          [ Load 1 2, -- 1 = id
-            Load 2 1, -- 2 = True
+          [ LoadData 1 2, -- 1 = id
+            LoadData 2 1, -- 2 = True
             AppNew 3 1 [2], -- 3 = appNew(1, 2)
             Call 4 3, -- 4 = 3()
-            Return 4 -- return 4
+            ReturnSymbol 4 -- return 4
           ]
   generate idTrueProg
   pure ()

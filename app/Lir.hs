@@ -12,13 +12,14 @@ data Fun = Fun {symbol :: Int, arity :: Int, code :: Block}
 type Block = [Op]
 
 data Op
-  = Load {name :: Int, symbol :: Int}
-  | Index {name :: Int, var :: Int, arg :: Int}
+  = LoadData {name :: Int, symbol :: Int}
+  | LoadArg {name :: Int, var :: Int, arg :: Int}
   | Copy {name :: Int, var :: Int}
   | Call {name :: Int, var :: Int}
-  | Return {var :: Int}
-  | Free {var :: Int}
-  | FreeDeep {var :: Int}
+  | ReturnTerm {var :: Int}
+  | ReturnSymbol {var :: Int}
+  | FreeArgs {var :: Int}
+  | FreeTerm {var :: Int}
   | AppNew {name :: Int, var :: Int, args :: [Int]}
   | AppFrom {name :: Int, old :: Int, var :: Int, args :: [Int]}
   | PartialNew {name :: Int, var :: Int, args :: [Int]}

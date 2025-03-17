@@ -19,15 +19,15 @@ public:
 
   void main();
   void data(int symbol, int arity);
-  void function(int symbol, int arity);
-  void load(int name, int symbol);
-  void index(int name, int var, int i);
+  void fun(int symbol, int arity);
+  void loadData(int name, int symbol);
+  void loadArg(int name, int var, int i);
   void copy(int name, int var);
   void call(int name, int var);
-  void ret(int var);
-  void retSymbol(int var);
-  void free(int var);
-  void freeDeep(int var);
+  void returnTerm(int var);
+  void returnSymbol(int var);
+  void freeArgs(int var);
+  void freeTerm(int var);
   void appNew(int name, int var, int length, int *args);
   void appFrom(int name, int old, int var, int length, int *args);
   void partialNew(int name, int var, int length, int *args);

@@ -19,7 +19,7 @@ void State::data(int symbol, int arity) {
   addGlobal(name, noopFun, symbol, arity);
 }
 
-void State::function(int symbol, int arity) {
+void State::fun(int symbol, int arity) {
   auto funName = "fun_" + std::to_string(symbol);
 
   llvm::Function *fun = llvm::Function::Create(
@@ -39,7 +39,7 @@ void State::function(int symbol, int arity) {
   addGlobal(name, fun, symbol, arity);
 }
 
-void State::load(int name, int symbol) {
+void State::loadData(int name, int symbol) {
   llvm::GlobalVariable *global = globals[symbol];
 
   llvm::AllocaInst *termAlloca = builder->CreateAlloca(termType, nullptr);
@@ -49,7 +49,7 @@ void State::load(int name, int symbol) {
   locals.insert({name, termAlloca});
 }
 
-void State::index(int name, int var, int i) {
+void State::loadArg(int name, int var, int i) {
   llvm::AllocaInst *term = locals[var];
 
   llvm::LoadInst *termLoad = builder->CreateLoad(termType, term);
@@ -76,20 +76,20 @@ void State::call(int name, int var) {
   locals.insert({name, resultAlloca});
 }
 
-void State::ret(int var) {
+void State::returnTerm(int var) {
   llvm::AllocaInst *term = locals[var];
   llvm::LoadInst *termLoad = builder->CreateLoad(termType, term);
   builder->CreateRet(termLoad);
 }
 
-void State::retSymbol(int var) {
+void State::returnSymbol(int var) {
   llvm::AllocaInst *term = locals[var];
   llvm::LoadInst *termLoad = builder->CreateLoad(termType, term);
   llvm::Value *symbol = builder->CreateExtractValue(termLoad, 2);
   builder->CreateRet(symbol);
 }
 
-void State::free(int var) {
+void State::freeArgs(int var) {
   llvm::AllocaInst *term = locals[var];
 
   llvm::LoadInst *termLoad = builder->CreateLoad(termType, term);
