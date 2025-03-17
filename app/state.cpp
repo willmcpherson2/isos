@@ -73,7 +73,7 @@ llvm::Function *State::initNoopFun() {
 
   llvm::FunctionType *funType =
     llvm::FunctionType::get(termType, {termType}, false);
-  fun =
+  llvm::Function *fun =
     llvm::Function::Create(funType, llvm::Function::PrivateLinkage, name, mod);
 
   llvm::BasicBlock *block = llvm::BasicBlock::Create(context, "entry", fun);

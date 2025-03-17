@@ -5,7 +5,7 @@ void State::main() {
 
   llvm::FunctionType *funType =
     llvm::FunctionType::get(llvm::Type::getInt32Ty(context), {}, false);
-  fun =
+  llvm::Function *fun =
     llvm::Function::Create(funType, llvm::Function::ExternalLinkage, name, mod);
 
   llvm::BasicBlock *block = llvm::BasicBlock::Create(context, "entry", fun);
@@ -47,7 +47,7 @@ void State::function(int symbol, int arity) {
 
   llvm::FunctionType *funType =
     llvm::FunctionType::get(termType, {termType}, false);
-  fun = llvm::Function::Create(
+  llvm::Function *fun = llvm::Function::Create(
     funType, llvm::Function::PrivateLinkage, funName, mod
   );
 
