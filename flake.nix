@@ -14,6 +14,13 @@
     {
       devShells.${system}.default = pkgs.mkShell {
         buildInputs = with pkgs; [
+          cabal-install
+          haskell.compiler.ghc910
+          (haskell-language-server.override { supportedGhcVersions = [ "910" ]; })
+          haskellPackages.cabal-fmt
+          haskellPackages.hoogle
+          ormolu
+
           clang-tools
           llvmPackages_19.clang
           llvmPackages_19.llvm
