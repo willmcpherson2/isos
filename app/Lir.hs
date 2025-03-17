@@ -1,5 +1,3 @@
-{-# LANGUAGE DuplicateRecordFields #-}
-
 -- Low-level Intermediate Representation
 module Lir (Prog (..), Data (..), Fun (..), Block, Op (..), Arm (..)) where
 

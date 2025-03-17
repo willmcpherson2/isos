@@ -1,23 +1,38 @@
-cabal-version:      3.0
-name:               hllvm
-version:            0.1.0.0
-license:            MIT
-license-file:       LICENSE
-author:             William McPherson
-maintainer:         willmcpherson2@gmail.com
-build-type:         Simple
+cabal-version: 3.0
+name:          hllvm
+version:       0.1.0.0
+license:       MIT
+license-file:  LICENSE
+author:        William McPherson
+maintainer:    willmcpherson2@gmail.com
+build-type:    Simple
 
 common common
-  default-language: GHC2024
-  ghc-options:      -Wall
-  cc-options:       -Wall
+  default-language:   GHC2024
+  default-extensions:
+    DuplicateRecordFields
+    OverloadedRecordDot
+    OverloadedStrings
+    QuasiQuotes
+    TemplateHaskell
+
+  ghc-options:        -Wall
+  cc-options:         -Wall
 
 executable hllvm
-  import:           common
-  main-is:          Main.hs
-  other-modules:    Lir, Generate
-  build-depends:    base ^>=4.20.0.0
-                    , inline-c-cpp ^>=0.5.0.2
-  hs-source-dirs:   app
-  c-sources:        app/state.cpp app/ops.cpp
-  extra-libraries:  LLVM-19
+  import:          common
+  main-is:         Main.hs
+  other-modules:
+    Generate
+    Lir
+
+  build-depends:
+    , base          ^>=4.20.0.0
+    , inline-c-cpp  ^>=0.5.0.2
+
+  hs-source-dirs:  app
+  c-sources:
+    app/ops.cpp
+    app/state.cpp
+
+  extra-libraries: LLVM-19
