@@ -140,6 +140,34 @@ void State::main() {
   locals.clear();
 }
 
+void State::data(int symbol, int arity) {
+  auto name = "data_" + std::to_string(symbol);
+
+  std::vector<llvm::Constant *> fieldValues = {
+    noopFun,                                                            // fun
+    llvm::ConstantPointerNull::get(llvm::PointerType::get(context, 0)), // args
+    llvm::ConstantInt::get(llvm::Type::getInt32Ty(context), symbol), // symbol
+    llvm::ConstantInt::get(llvm::Type::getInt16Ty(context), arity),  // length
+    llvm::ConstantInt::get(llvm::Type::getInt16Ty(context), arity)   // capacity
+  };
+  llvm::Constant *termInit = llvm::ConstantStruct::get(termType, fieldValues);
+
+  auto *global = new llvm::GlobalVariable(
+    mod,                               // Module
+    termType,                          // Type
+    true,                              // isConstant
+    llvm::GlobalValue::PrivateLinkage, // Linkage
+    termInit,                          // Initializer
+    name,                              // Name
+    nullptr,                           // InsertBefore
+    llvm::GlobalValue::NotThreadLocal, // ThreadLocalMode
+    0,                                 // AddressSpace
+    false                              // isExternallyInitialized
+  );
+
+  globals.insert({symbol, global});
+}
+
 void State::function(int symbol, int arity) {
   auto funName = "fun_" + std::to_string(symbol);
 
@@ -185,34 +213,6 @@ void State::function(int symbol, int arity) {
   globals.insert({symbol, global});
 }
 
-void State::data(int symbol, int arity) {
-  auto name = "data_" + std::to_string(symbol);
-
-  std::vector<llvm::Constant *> fieldValues = {
-    noopFun,                                                            // fun
-    llvm::ConstantPointerNull::get(llvm::PointerType::get(context, 0)), // args
-    llvm::ConstantInt::get(llvm::Type::getInt32Ty(context), symbol), // symbol
-    llvm::ConstantInt::get(llvm::Type::getInt16Ty(context), arity),  // length
-    llvm::ConstantInt::get(llvm::Type::getInt16Ty(context), arity)   // capacity
-  };
-  llvm::Constant *termInit = llvm::ConstantStruct::get(termType, fieldValues);
-
-  auto *global = new llvm::GlobalVariable(
-    mod,                               // Module
-    termType,                          // Type
-    true,                              // isConstant
-    llvm::GlobalValue::PrivateLinkage, // Linkage
-    termInit,                          // Initializer
-    name,                              // Name
-    nullptr,                           // InsertBefore
-    llvm::GlobalValue::NotThreadLocal, // ThreadLocalMode
-    0,                                 // AddressSpace
-    false                              // isExternallyInitialized
-  );
-
-  globals.insert({symbol, global});
-}
-
 void State::load(int name, int symbol) {
   llvm::GlobalVariable *global = globals[symbol];
 
@@ -221,6 +221,54 @@ void State::load(int name, int symbol) {
   builder->CreateStore(termLoad, termAlloca);
 
   locals.insert({name, termAlloca});
+}
+
+void State::index(int name, int var, int i) {
+  llvm::AllocaInst *term = locals[var];
+
+  llvm::LoadInst *termLoad = builder->CreateLoad(termType, term);
+  llvm::Value *argsField = builder->CreateExtractValue(termLoad, 1);
+  llvm::ConstantInt *argIndex =
+    llvm::ConstantInt::get(llvm::Type::getInt32Ty(context), i);
+  llvm::Value *argPtr = builder->CreateGEP(termType, argsField, argIndex);
+  llvm::LoadInst *arg = builder->CreateLoad(termType, argPtr);
+  llvm::AllocaInst *argAlloca = builder->CreateAlloca(termType, nullptr);
+  builder->CreateStore(arg, argAlloca);
+
+  locals.insert({name, argAlloca});
+}
+
+void State::call(int name, int var) {
+  llvm::AllocaInst *term = locals[var];
+
+  llvm::LoadInst *termLoad = builder->CreateLoad(termType, term);
+  llvm::Value *fun = builder->CreateExtractValue(termLoad, 0);
+  llvm::CallInst *result = builder->CreateCall(funType, fun, {termLoad});
+  llvm::AllocaInst *resultAlloca = builder->CreateAlloca(termType, nullptr);
+  builder->CreateStore(result, resultAlloca);
+
+  locals.insert({name, resultAlloca});
+}
+
+void State::ret(int var) {
+  llvm::AllocaInst *term = locals[var];
+  llvm::LoadInst *termLoad = builder->CreateLoad(termType, term);
+  builder->CreateRet(termLoad);
+}
+
+void State::retSymbol(int var) {
+  llvm::AllocaInst *term = locals[var];
+  llvm::LoadInst *termLoad = builder->CreateLoad(termType, term);
+  llvm::Value *symbol = builder->CreateExtractValue(termLoad, 2);
+  builder->CreateRet(symbol);
+}
+
+void State::free(int var) {
+  llvm::AllocaInst *term = locals[var];
+
+  llvm::LoadInst *termLoad = builder->CreateLoad(termType, term);
+  llvm::Value *argsField = builder->CreateExtractValue(termLoad, 1);
+  builder->CreateCall(freeFun, {argsField});
 }
 
 void State::appNew(int name, int var, int length, int *args) {
@@ -255,54 +303,6 @@ void State::appNew(int name, int var, int length, int *args) {
   builder->CreateCall(appNewFun, argValues);
 
   locals.insert({name, termAlloca});
-}
-
-void State::call(int name, int var) {
-  llvm::AllocaInst *term = locals[var];
-
-  llvm::LoadInst *termLoad = builder->CreateLoad(termType, term);
-  llvm::Value *fun = builder->CreateExtractValue(termLoad, 0);
-  llvm::CallInst *result = builder->CreateCall(funType, fun, {termLoad});
-  llvm::AllocaInst *resultAlloca = builder->CreateAlloca(termType, nullptr);
-  builder->CreateStore(result, resultAlloca);
-
-  locals.insert({name, resultAlloca});
-}
-
-void State::free(int var) {
-  llvm::AllocaInst *term = locals[var];
-
-  llvm::LoadInst *termLoad = builder->CreateLoad(termType, term);
-  llvm::Value *argsField = builder->CreateExtractValue(termLoad, 1);
-  builder->CreateCall(freeFun, {argsField});
-}
-
-void State::index(int name, int var, int i) {
-  llvm::AllocaInst *term = locals[var];
-
-  llvm::LoadInst *termLoad = builder->CreateLoad(termType, term);
-  llvm::Value *argsField = builder->CreateExtractValue(termLoad, 1);
-  llvm::ConstantInt *argIndex =
-    llvm::ConstantInt::get(llvm::Type::getInt32Ty(context), i);
-  llvm::Value *argPtr = builder->CreateGEP(termType, argsField, argIndex);
-  llvm::LoadInst *arg = builder->CreateLoad(termType, argPtr);
-  llvm::AllocaInst *argAlloca = builder->CreateAlloca(termType, nullptr);
-  builder->CreateStore(arg, argAlloca);
-
-  locals.insert({name, argAlloca});
-}
-
-void State::ret(int var) {
-  llvm::AllocaInst *term = locals[var];
-  llvm::LoadInst *termLoad = builder->CreateLoad(termType, term);
-  builder->CreateRet(termLoad);
-}
-
-void State::retSymbol(int var) {
-  llvm::AllocaInst *term = locals[var];
-  llvm::LoadInst *termLoad = builder->CreateLoad(termType, term);
-  llvm::Value *symbol = builder->CreateExtractValue(termLoad, 2);
-  builder->CreateRet(symbol);
 }
 
 void State::write() {

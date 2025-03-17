@@ -16,6 +16,7 @@ enum Error {
 class State {
 public:
   State();
+
   void main();
   void data(int symbol, int arity);
   void function(int symbol, int arity);
