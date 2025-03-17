@@ -15,8 +15,8 @@
       devShells.${system}.default = pkgs.mkShell {
         buildInputs = with pkgs; [
           clang-tools
-          llvmPackages_latest.clang
-          llvmPackages_latest.llvm
+          llvmPackages_19.clang
+          llvmPackages_19.llvm
         ];
       };
     };
