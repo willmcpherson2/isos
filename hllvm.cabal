@@ -37,4 +37,5 @@ executable hllvm
     app/ops.cpp
     app/state.cpp
 
+  extra-gcc-options: -fsanitize=address
   extra-libraries: LLVM-19
