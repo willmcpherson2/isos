@@ -21,8 +21,9 @@ common common
   cc-options:         -Wall
 
 executable hllvm
-  import:          common
-  main-is:         Main.hs
+  import:            common
+  main-is:           Main.hs
+  hs-source-dirs:    app
   other-modules:
     Generate
     Lir
@@ -32,10 +33,9 @@ executable hllvm
     , inline-c-cpp  ^>=0.5.0.2
     , vector        ^>=0.13.1.0
 
-  hs-source-dirs:  app
   c-sources:
     app/ops.cpp
     app/state.cpp
 
   extra-gcc-options: -fsanitize=address
-  extra-libraries: LLVM-19
+  extra-libraries:   LLVM-19
