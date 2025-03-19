@@ -11,8 +11,8 @@ typedef struct Term {
   int16_t capacity;
 } Term;
 
-void app_new(Term *fun, int32_t length, Term *args) {
-  int32_t size = length * sizeof(Term);
+void app_new(Term *fun, uint64_t length, Term *args) {
+  uint64_t size = length * sizeof(Term);
   fun->args = malloc(size);
   memcpy(fun->args, args, size);
 }

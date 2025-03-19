@@ -105,7 +105,7 @@ void State::appNew(int name, int var, int length, int *args) {
   builder->CreateStore(termLoad, termAlloca);
 
   llvm::ConstantInt *lengthConstant =
-    llvm::ConstantInt::get(llvm::Type::getInt32Ty(context), length);
+    llvm::ConstantInt::get(llvm::Type::getInt64Ty(context), length);
 
   llvm::ArrayType *argsType = llvm::ArrayType::get(termType, length);
   llvm::AllocaInst *argsAlloca = builder->CreateAlloca(argsType, nullptr);

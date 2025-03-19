@@ -102,7 +102,7 @@ llvm::Function *State::initAppNewFun() {
   llvm::FunctionType *funType = llvm::FunctionType::get(
     llvm::Type::getVoidTy(context),
     {llvm::PointerType::get(context, 0),
-     llvm::Type::getInt32Ty(context),
+     llvm::Type::getInt64Ty(context),
      llvm::PointerType::get(context, 0)},
     false
   );
