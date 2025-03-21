@@ -11,9 +11,10 @@
       system = "x86_64-linux";
       pkgs = nixpkgs.legacyPackages.${system};
     in
+    with pkgs;
     {
-      devShells.${system}.default = pkgs.mkShell {
-        buildInputs = with pkgs; [
+      devShells.${system}.default = mkShell {
+        buildInputs = [
           cabal-install
           haskell.compiler.ghc910
           (haskell-language-server.override { supportedGhcVersions = [ "910" ]; })
@@ -25,6 +26,9 @@
           llvmPackages_19.clang
           llvmPackages_19.llvm
         ];
+        shellHook = ''
+          export LD_LIBRARY_PATH=${llvmPackages_19.llvm.lib}/lib:$LD_LIBRARY_PATH
+        '';
       };
     };
 }

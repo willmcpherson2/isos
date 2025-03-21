@@ -21,9 +21,9 @@ common common
   cc-options:         -Wall
 
 executable isos
-  import:            common
-  main-is:           Main.hs
-  hs-source-dirs:    app
+  import:          common
+  main-is:         Main.hs
+  hs-source-dirs:  app
   other-modules:
     Generate
     Lir
@@ -37,5 +37,4 @@ executable isos
     app/ops.cpp
     app/state.cpp
 
-  extra-gcc-options: -fsanitize=address
-  extra-libraries:   LLVM-19
+  extra-libraries: LLVM-19

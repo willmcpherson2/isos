@@ -1,11 +1,9 @@
-CXX = g++
 TEST = test
 FLAGS = -g -fsanitize=address,undefined,leak
 LDFLAGS = -lLLVM-19
 SRC = app
 SRCS = $(SRC)/test.cpp $(SRC)/state.cpp $(SRC)/ops.cpp
 
-CC = gcc
 RT = rt.o
 RT_FLAGS = -O2
 RT_SRC = rt
