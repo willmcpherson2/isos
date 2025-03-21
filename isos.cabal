@@ -1,5 +1,5 @@
 cabal-version: 3.0
-name:          hllvm
+name:          isos
 version:       0.1.0.0
 license:       MIT
 license-file:  LICENSE
@@ -20,7 +20,7 @@ common common
   ghc-options:        -Wall
   cc-options:         -Wall
 
-executable hllvm
+executable isos
   import:            common
   main-is:           Main.hs
   hs-source-dirs:    app
