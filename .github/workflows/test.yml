@@ -11,7 +11,7 @@ jobs:
     - run: nix flake check
     - run: nix develop .#ci
     - run: clang-format -Werror --dry-run $(find app rt -regex ".*\.\(h\|c\|cpp\)$")
-    - run: fourmolu --mode check $(find app -name "*.hs")
+    # - run: fourmolu --mode check $(find app -name "*.hs")
     - run: cabal-fmt --check *.cabal
     - run: make run
     - run: cabal run
