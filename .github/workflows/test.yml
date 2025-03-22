@@ -13,4 +13,5 @@ jobs:
     - run: nix develop .#ci -c fourmolu --mode check $(find app -name "*.hs")
     - run: nix develop .#ci -c cabal-fmt --check *.cabal
     - run: nix develop .#ci -c make run
+    - run: nix develop .#ci -c cabal update
     - run: nix develop .#ci -c cabal run
