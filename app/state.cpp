@@ -19,6 +19,7 @@ State::State()
     freeFun(initFreeFun()),
     freeTermFun(initFreeTermFun()),
     appNewFun(initAppNewFun()),
+    partialNewFun(initPartialNewFun()),
     copyFun(initCopyFun()) {}
 
 llvm::Module State::initMod() {
@@ -110,6 +111,21 @@ llvm::Function *State::initFreeTermFun() {
 
 llvm::Function *State::initAppNewFun() {
   auto name = "app_new";
+
+  llvm::FunctionType *funType = llvm::FunctionType::get(
+    llvm::Type::getVoidTy(context),
+    {llvm::PointerType::get(context, 0),
+     llvm::Type::getInt64Ty(context),
+     llvm::PointerType::get(context, 0)},
+    false
+  );
+  return llvm::Function::Create(
+    funType, llvm::Function::ExternalLinkage, name, mod
+  );
+}
+
+llvm::Function *State::initPartialNewFun() {
+  auto name = "partial_new";
 
   llvm::FunctionType *funType = llvm::FunctionType::get(
     llvm::Type::getVoidTy(context),
