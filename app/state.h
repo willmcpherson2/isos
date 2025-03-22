@@ -19,7 +19,7 @@ public:
 
   void main();
   void data(int symbol, int arity);
-  void fun(int symbol, int arity);
+  void function(int symbol, int arity);
   void loadData(int name, int symbol);
   void loadArg(int name, int var, int i);
   void copy(int name, int var);
@@ -70,6 +70,8 @@ private:
   llvm::Function *partialNewFun = nullptr;
   std::optional<llvm::IRBuilder<>> builder;
   std::unordered_map<int, llvm::GlobalVariable *> globals;
+  llvm::Function *fun = nullptr;
   llvm::Argument *argument = nullptr;
   std::unordered_map<int, llvm::AllocaInst *> locals;
+  llvm::SwitchInst *swit = nullptr;
 };

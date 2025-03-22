@@ -5,7 +5,7 @@ void State::main() {
 
   llvm::FunctionType *funType =
     llvm::FunctionType::get(llvm::Type::getInt32Ty(context), {}, false);
-  llvm::Function *fun =
+  fun =
     llvm::Function::Create(funType, llvm::Function::ExternalLinkage, name, mod);
 
   llvm::BasicBlock *block = llvm::BasicBlock::Create(context, "entry", fun);
@@ -19,10 +19,10 @@ void State::data(int symbol, int arity) {
   addGlobal(name, noopFun, symbol, arity);
 }
 
-void State::fun(int symbol, int arity) {
+void State::function(int symbol, int arity) {
   auto funName = "fun_" + std::to_string(symbol);
 
-  llvm::Function *fun = llvm::Function::Create(
+  fun = llvm::Function::Create(
     funType, llvm::Function::PrivateLinkage, funName, mod
   );
 
@@ -177,6 +177,27 @@ void State::partialNew(int name, int var, int length, int *args) {
   builder->CreateCall(partialNewFun, argValues);
 
   locals.insert({name, termAlloca});
+}
+
+void State::match(int var) {
+  llvm::AllocaInst *term = locals[var];
+  llvm::LoadInst *termLoad = builder->CreateLoad(termType, term);
+  llvm::Value *symbol = builder->CreateExtractValue(termLoad, 2);
+
+  llvm::BasicBlock *defaultArm =
+    llvm::BasicBlock::Create(context, "default", fun);
+  swit = builder->CreateSwitch(symbol, defaultArm, 0);
+  builder->SetInsertPoint(defaultArm);
+  builder->CreateUnreachable();
+}
+
+void State::arm(int symbol) {
+  llvm::ConstantInt *symbolConstant =
+    llvm::ConstantInt::get(llvm::Type::getInt32Ty(context), symbol);
+  llvm::BasicBlock *armBlock =
+    llvm::BasicBlock::Create(context, std::to_string(symbol), fun);
+  swit->addCase(symbolConstant, armBlock);
+  builder->SetInsertPoint(armBlock);
 }
 
 void State::addGlobal(

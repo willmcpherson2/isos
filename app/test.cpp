@@ -57,7 +57,7 @@ void testIdentity() {
   state.data(2, 0); // 2 = False
 
   // id x = x
-  state.fun(3, 1);        // 3 = id
+  state.function(3, 1);   // 3 = id
   state.loadArg(1, 0, 0); // 1 = 0.args[0]
   state.freeArgs(0);      // free 0.args
   state.call(2, 1);       // 2 = 1.fun(1)
@@ -76,10 +76,69 @@ void testIdentity() {
   assert(result == 1);
 }
 
+void testMatch() {
+  State state{};
+  CHECK(state);
+
+  // True
+  state.data(1, 0);
+  // False
+  state.data(2, 0);
+
+  state.main();
+  state.loadData(1, 1);
+  state.loadData(2, 2);
+  state.match(1);
+  state.arm(1);
+  state.returnSymbol(1);
+  state.arm(2);
+  state.returnSymbol(2);
+
+  int result = run(state);
+  assert(result == 1);
+}
+
+void testNot() {
+  State state{};
+  CHECK(state);
+
+  // True
+  state.data(1, 0);
+  // False
+  state.data(2, 0);
+
+  // not True = False
+  // not False = True
+  state.function(3, 1);
+  state.loadArg(1, 0, 0);
+  state.freeArgs(0);
+  state.match(1);
+  state.arm(1);
+  state.loadData(2, 2);
+  state.returnTerm(2);
+  state.arm(2);
+  state.loadData(3, 1);
+  state.returnTerm(3);
+
+  // main = not True
+  state.main();
+  state.loadData(1, 3);
+  state.loadData(2, 1);
+  int args[] = {2};
+  state.appNew(3, 1, 1, args);
+  state.call(4, 3);
+  state.returnSymbol(4);
+
+  int result = run(state);
+  assert(result == 2);
+}
+
 int main() {
   testReturnSymbol();
   testCopy();
   testIdentity();
+  testMatch();
+  testNot();
 
   return 0;
 }

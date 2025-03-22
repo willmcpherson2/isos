@@ -39,7 +39,7 @@ genData state Data{symbol, arity} =
 
 genFuns :: Ptr State -> Fun -> IO ()
 genFuns state Fun{symbol, arity, block} = do
-  [C.exp| void { $(State *state)->fun($(int symbol), $(int arity)) } |]
+  [C.exp| void { $(State *state)->function($(int symbol), $(int arity)) } |]
   genBlock state block
 
 genMain :: Ptr State -> Block -> IO ()
@@ -68,4 +68,11 @@ genOp state = \case
     mArgs <- thaw args
     [C.exp| void { $(State *state)->partialNew($(int name), $(int var), $vec-len:mArgs, $vec-ptr:(int *mArgs)) } |]
   PartialFrom{name, old, var, args} -> error "todo"
-  Match{var, arms} -> error "todo"
+  Match{var, arms} -> do
+    [C.exp| void { $(State *state)->match($(int var)) } |]
+    mapM_ (genArm state) arms
+
+genArm :: Ptr State -> Arm -> IO ()
+genArm state Arm{symbol, block} = do
+  [C.exp| void { $(State *state)->arm($(int symbol)) } |]
+  mapM_ (genOp state) block
