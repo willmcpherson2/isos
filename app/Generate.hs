@@ -59,7 +59,7 @@ genOp state = \case
   ReturnTerm{var} -> [C.exp| void { $(State *state)->returnTerm($(int var)) } |]
   ReturnSymbol{var} -> [C.exp| void { $(State *state)->returnSymbol($(int var)) } |]
   FreeArgs{var} -> [C.exp| void { $(State *state)->freeArgs($(int var)) } |]
-  FreeTerm{var} -> error "todo"
+  FreeTerm{var} -> [C.exp| void { $(State *state)->freeTerm($(int var)) } |]
   AppNew{name, var, args} -> do
     mArgs <- thaw args
     [C.exp| void { $(State *state)->appNew($(int name), $(int var), $vec-len:mArgs, $vec-ptr:(int *mArgs)) } |]

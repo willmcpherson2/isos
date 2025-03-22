@@ -40,6 +40,7 @@ void testCopy() {
   state.main();
   state.loadData(1, 1);  // 1 = True
   state.copy(2, 1);      // 2 = copy 1
+  state.freeTerm(2);     // free_term 2
   state.returnSymbol(2); // return 2
 
   int result = run(state);

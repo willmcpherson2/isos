@@ -17,6 +17,7 @@ State::State()
     funType(initFunType()),
     noopFun(initNoopFun()),
     freeFun(initFreeFun()),
+    freeTermFun(initFreeTermFun()),
     appNewFun(initAppNewFun()),
     copyFun(initCopyFun()) {}
 
@@ -87,6 +88,17 @@ llvm::Function *State::initNoopFun() {
 
 llvm::Function *State::initFreeFun() {
   auto name = "free";
+
+  llvm::FunctionType *funType = llvm::FunctionType::get(
+    llvm::Type::getVoidTy(context), {llvm::PointerType::get(context, 0)}, false
+  );
+  return llvm::Function::Create(
+    funType, llvm::Function::ExternalLinkage, name, mod
+  );
+}
+
+llvm::Function *State::initFreeTermFun() {
+  auto name = "free_term";
 
   llvm::FunctionType *funType = llvm::FunctionType::get(
     llvm::Type::getVoidTy(context), {llvm::PointerType::get(context, 0)}, false

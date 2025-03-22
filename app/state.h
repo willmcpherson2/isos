@@ -51,6 +51,7 @@ private:
   llvm::Function *initNoopFun();
   llvm::Function *initCopyFun();
   llvm::Function *initFreeFun();
+  llvm::Function *initFreeTermFun();
   llvm::Function *initAppNewFun();
 
   void addGlobal(std::string name, llvm::Function *fun, int symbol, int arity);
@@ -63,6 +64,7 @@ private:
   llvm::Function *noopFun = nullptr;
   llvm::Function *copyFun = nullptr;
   llvm::Function *freeFun = nullptr;
+  llvm::Function *freeTermFun = nullptr;
   llvm::Function *appNewFun = nullptr;
   std::optional<llvm::IRBuilder<>> builder;
   std::unordered_map<int, llvm::GlobalVariable *> globals;

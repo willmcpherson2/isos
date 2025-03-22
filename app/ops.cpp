@@ -106,6 +106,11 @@ void State::freeArgs(int var) {
   builder->CreateCall(freeFun, {argsField});
 }
 
+void State::freeTerm(int var) {
+  llvm::AllocaInst *term = locals[var];
+  builder->CreateCall(freeTermFun, {term});
+}
+
 void State::appNew(int name, int var, int length, int *args) {
   llvm::AllocaInst *term = locals[var];
 
