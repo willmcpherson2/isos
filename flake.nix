@@ -14,7 +14,7 @@
         pkgs.cabal-install
         pkgs.haskell.compiler.ghc910
         pkgs.haskellPackages.cabal-fmt
-        pkgs.haskellPackages.fourmolu
+        pkgs.haskellPackages.ormolu
         pkgs.clang-tools
         pkgs.llvmPackages_19.llvm
       ];

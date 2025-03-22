@@ -10,7 +10,7 @@ jobs:
     - uses: cachix/install-nix-action@v31
     - run: nix flake check
     - run: nix develop .#ci -c clang-format -Werror --dry-run $(find app rt -regex ".*\.\(h\|c\|cpp\)$")
-    - run: nix develop .#ci -c fourmolu --mode check $(find app -name "*.hs")
+    - run: nix develop .#ci -c ormolu --mode check $(find app -name "*.hs")
     - run: nix develop .#ci -c cabal-fmt --check *.cabal
     - run: nix develop .#ci -c make run
     - run: nix develop .#ci -c cabal update
