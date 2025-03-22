@@ -5,9 +5,11 @@
 
 #define PARTIAL 0
 
+typedef struct Term Term;
+
 typedef struct Term {
-  void (*fun)(struct Term *);
-  struct Term *args;
+  void (*fun)(Term *);
+  Term *args;
   uint32_t symbol;
   uint16_t length;
   uint16_t capacity;
