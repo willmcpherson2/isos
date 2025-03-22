@@ -6,14 +6,14 @@
 #define PARTIAL 0
 
 typedef struct Term {
-  struct Term (*fun)(struct Term);
+  void (*fun)(struct Term *);
   struct Term *args;
   uint32_t symbol;
   uint16_t length;
   uint16_t capacity;
 } Term;
 
-Term noop(Term term) { return term; }
+void noop(Term *term) { return; }
 
 void app_new(Term *fun, uint64_t length, Term *args) {
   uint64_t size = length * sizeof(Term);
