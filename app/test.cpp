@@ -6,7 +6,30 @@
     assert(false);                                                             \
   }
 
-int main() {
+int run(State &state) {
+  state.write();
+  CHECK(state);
+
+  return WEXITSTATUS(std::system("./main"));
+}
+
+void testReturnSymbol() {
+  State state{};
+  CHECK(state);
+
+  // True
+  state.data(1, 0);
+
+  // main = True
+  state.main();
+  state.loadData(1, 1);  // 1 = True
+  state.returnSymbol(1); // return 1
+
+  int result = run(state);
+  assert(result == 1);
+}
+
+void testIdentity() {
   State state{};
   CHECK(state);
 
@@ -31,14 +54,13 @@ int main() {
   state.call(4, 3);            // 4 = 3.fun(3)
   state.returnSymbol(4);       // return 4
 
-  state.print();
+  int result = run(state);
+  assert(result == 1);
+}
 
-  state.write();
-  CHECK(state);
-
-  int result = WEXITSTATUS(std::system("./main"));
-  printf("main exit code: %d\n", result);
-  assert(result == 1); // main == True
+int main() {
+  testReturnSymbol();
+  testIdentity();
 
   return 0;
 }
