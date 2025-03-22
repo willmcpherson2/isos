@@ -23,7 +23,6 @@
           ormolu
 
           clang-tools
-          llvmPackages_19.clang
           llvmPackages_19.llvm
         ];
         shellHook = ''
