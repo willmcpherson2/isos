@@ -3,7 +3,7 @@ module Generate (generate) where
 import Control.Monad (when)
 import Data.Vector.Storable (thaw)
 import Foreign (Ptr)
-import Language.C.Inline.Cpp qualified as C
+import qualified Language.C.Inline.Cpp as C
 import Lir
 import System.Exit (ExitCode (..), exitWith)
 

@@ -8,9 +8,11 @@ maintainer:    willmcpherson2@gmail.com
 build-type:    Simple
 
 common common
-  default-language:   GHC2024
   default-extensions:
     DuplicateRecordFields
+    EmptyDataDecls
+    LambdaCase
+    NamedFieldPuns
     OverloadedLists
     OverloadedRecordDot
     OverloadedStrings
