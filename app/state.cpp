@@ -17,7 +17,8 @@ State::State()
     funType(initFunType()),
     noopFun(initNoopFun()),
     freeFun(initFreeFun()),
-    appNewFun(initAppNewFun()) {}
+    appNewFun(initAppNewFun()),
+    copyFun(initCopyFun()) {}
 
 llvm::Module State::initMod() {
   llvm::InitializeAllTargetInfos();
@@ -103,6 +104,19 @@ llvm::Function *State::initAppNewFun() {
     {llvm::PointerType::get(context, 0),
      llvm::Type::getInt64Ty(context),
      llvm::PointerType::get(context, 0)},
+    false
+  );
+  return llvm::Function::Create(
+    funType, llvm::Function::ExternalLinkage, name, mod
+  );
+}
+
+llvm::Function *State::initCopyFun() {
+  auto name = "copy";
+
+  llvm::FunctionType *funType = llvm::FunctionType::get(
+    llvm::Type::getVoidTy(context),
+    {llvm::PointerType::get(context, 0), llvm::PointerType::get(context, 0)},
     false
   );
   return llvm::Function::Create(

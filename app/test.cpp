@@ -29,6 +29,23 @@ void testReturnSymbol() {
   assert(result == 1);
 }
 
+void testCopy() {
+  State state{};
+  CHECK(state);
+
+  // True
+  state.data(1, 0);
+
+  // main = True
+  state.main();
+  state.loadData(1, 1);  // 1 = True
+  state.copy(2, 1);      // 2 = copy 1
+  state.returnSymbol(2); // return 2
+
+  int result = run(state);
+  assert(result == 1);
+}
+
 void testIdentity() {
   State state{};
   CHECK(state);
@@ -60,6 +77,7 @@ void testIdentity() {
 
 int main() {
   testReturnSymbol();
+  testCopy();
   testIdentity();
 
   return 0;

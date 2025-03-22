@@ -54,7 +54,7 @@ genOp :: Ptr State -> Op -> IO ()
 genOp state = \case
   LoadData{name, symbol} -> [C.exp| void { $(State *state)->loadData($(int name), $(int symbol)) } |]
   LoadArg{name, var, arg} -> [C.exp| void { $(State *state)->loadArg($(int name), $(int var), $(int arg)) } |]
-  Copy{name, var} -> error "todo"
+  Copy{name, var} -> [C.exp| void { $(State *state)->copy($(int name), $(int var)) } |]
   Call{name, var} -> [C.exp| void { $(State *state)->call($(int name), $(int var)) } |]
   ReturnTerm{var} -> [C.exp| void { $(State *state)->returnTerm($(int var)) } |]
   ReturnSymbol{var} -> [C.exp| void { $(State *state)->returnSymbol($(int var)) } |]

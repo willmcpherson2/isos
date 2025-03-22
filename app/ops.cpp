@@ -65,6 +65,13 @@ void State::loadArg(int name, int var, int i) {
   locals.insert({name, argAlloca});
 }
 
+void State::copy(int name, int var) {
+  llvm::AllocaInst *dest = builder->CreateAlloca(termType, nullptr);
+  llvm::AllocaInst *src = locals[var];
+  builder->CreateCall(copyFun, {dest, src});
+  locals.insert({name, dest});
+}
+
 void State::call(int name, int var) {
   llvm::AllocaInst *term = locals[var];
 

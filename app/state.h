@@ -49,6 +49,7 @@ private:
   llvm::StructType *initTermType();
   llvm::FunctionType *initFunType();
   llvm::Function *initNoopFun();
+  llvm::Function *initCopyFun();
   llvm::Function *initFreeFun();
   llvm::Function *initAppNewFun();
 
@@ -60,6 +61,7 @@ private:
   llvm::StructType *termType = nullptr;
   llvm::FunctionType *funType = nullptr;
   llvm::Function *noopFun = nullptr;
+  llvm::Function *copyFun = nullptr;
   llvm::Function *freeFun = nullptr;
   llvm::Function *appNewFun = nullptr;
   std::optional<llvm::IRBuilder<>> builder;
