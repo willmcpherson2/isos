@@ -10,24 +10,31 @@
     let
       system = "x86_64-linux";
       pkgs = nixpkgs.legacyPackages.${system};
+      basePkgs = [
+        pkgs.cabal-install
+        pkgs.haskell.compiler.ghc910
+        pkgs.haskellPackages.cabal-fmt
+        pkgs.ormolu
+        pkgs.clang-tools
+        pkgs.llvmPackages_19.llvm
+      ];
+      baseShellHook = ''
+        export LD_LIBRARY_PATH=${pkgs.llvmPackages_19.llvm.lib}/lib:$LD_LIBRARY_PATH
+      '';
     in
-    with pkgs;
     {
-      devShells.${system}.default = mkShell {
-        buildInputs = [
-          cabal-install
-          haskell.compiler.ghc910
-          (haskell-language-server.override { supportedGhcVersions = [ "910" ]; })
-          haskellPackages.cabal-fmt
-          haskellPackages.hoogle
-          ormolu
-
-          clang-tools
-          llvmPackages_19.llvm
-        ];
-        shellHook = ''
-          export LD_LIBRARY_PATH=${llvmPackages_19.llvm.lib}/lib:$LD_LIBRARY_PATH
-        '';
+      devShells.${system} = {
+        default = pkgs.mkShell {
+          buildInputs = basePkgs ++ [
+            (pkgs.haskell-language-server.override { supportedGhcVersions = [ "910" ]; })
+            pkgs.haskellPackages.hoogle
+          ];
+          shellHook = baseShellHook;
+        };
+        ci = pkgs.mkShell {
+          buildInputs = basePkgs;
+          shellHook = baseShellHook;
+        };
       };
     };
 }
