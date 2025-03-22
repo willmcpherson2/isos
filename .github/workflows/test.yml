@@ -1,0 +1,17 @@
+name: "Test"
+on:
+  pull_request:
+  push:
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: cachix/install-nix-action@v31
+    - run: nix flake check
+    - run: nix develop
+    - run: clang-format -Werror --dry-run $(find app rt -regex ".*\.\(h\|c\|cpp\)$")
+    - run: ormolu --mode check $(find app -name "*.hs")
+    - run: cabal-fmt --check *.cabal
+    - run: make run
+    - run: cabal run
