@@ -1,8 +1,8 @@
 -- Low-level Intermediate Representation
 module Lir (Prog (..), Data (..), Fun (..), Block, Op (..), Arm (..)) where
 
-import Language.C.Inline.Cpp (CInt)
 import Data.Vector.Storable (Vector)
+import Language.C.Inline.Cpp (CInt)
 
 data Prog = Prog {datas :: [Data], funs :: [Fun], entry :: Block}
 
