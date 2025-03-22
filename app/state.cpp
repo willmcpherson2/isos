@@ -65,22 +65,21 @@ llvm::StructType *State::initTermType() {
 }
 
 llvm::FunctionType *State::initFunType() {
-  return llvm::FunctionType::get(termType, {termType}, false);
+  return llvm::FunctionType::get(
+    llvm::Type::getVoidTy(context), {llvm::PointerType::get(context, 0)}, false
+  );
 }
 
 llvm::Function *State::initNoopFun() {
   auto name = "noop";
 
-  llvm::FunctionType *funType =
-    llvm::FunctionType::get(termType, {termType}, false);
   llvm::Function *fun =
     llvm::Function::Create(funType, llvm::Function::PrivateLinkage, name, mod);
 
   llvm::BasicBlock *block = llvm::BasicBlock::Create(context, "entry", fun);
   builder.emplace(block);
 
-  llvm::Argument *arg = fun->getArg(0);
-  builder->CreateRet(arg);
+  builder->CreateRetVoid();
 
   return fun;
 }

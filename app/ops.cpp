@@ -29,9 +29,10 @@ void State::fun(int symbol, int arity) {
   llvm::BasicBlock *block = llvm::BasicBlock::Create(context, "entry", fun);
   builder.emplace(block);
 
-  llvm::Argument *arg = fun->getArg(0);
+  argument = fun->getArg(0);
+  llvm::LoadInst *argLoad = builder->CreateLoad(termType, argument);
   llvm::AllocaInst *argAlloca = builder->CreateAlloca(termType, nullptr);
-  builder->CreateStore(arg, argAlloca);
+  builder->CreateStore(argLoad, argAlloca);
   locals.clear();
   locals.insert({0, argAlloca});
 
@@ -69,17 +70,18 @@ void State::call(int name, int var) {
 
   llvm::LoadInst *termLoad = builder->CreateLoad(termType, term);
   llvm::Value *fun = builder->CreateExtractValue(termLoad, 0);
-  llvm::CallInst *result = builder->CreateCall(funType, fun, {termLoad});
-  llvm::AllocaInst *resultAlloca = builder->CreateAlloca(termType, nullptr);
-  builder->CreateStore(result, resultAlloca);
+  llvm::AllocaInst *termAlloca = builder->CreateAlloca(termType, nullptr);
+  builder->CreateStore(termLoad, termAlloca);
+  builder->CreateCall(funType, fun, {termAlloca});
 
-  locals.insert({name, resultAlloca});
+  locals.insert({name, termAlloca});
 }
 
 void State::returnTerm(int var) {
   llvm::AllocaInst *term = locals[var];
   llvm::LoadInst *termLoad = builder->CreateLoad(termType, term);
-  builder->CreateRet(termLoad);
+  builder->CreateStore(termLoad, argument);
+  builder->CreateRetVoid();
 }
 
 void State::returnSymbol(int var) {
