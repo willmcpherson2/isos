@@ -163,6 +163,12 @@ void State::linkRuntime() {
     error = RuntimeLinkFailed;
     return;
   }
+
+  mod.getFunction("noop")->setLinkage(llvm::Function::PrivateLinkage);
+  mod.getFunction("app_new")->setLinkage(llvm::Function::PrivateLinkage);
+  mod.getFunction("partial_new")->setLinkage(llvm::Function::PrivateLinkage);
+  mod.getFunction("copy")->setLinkage(llvm::Function::PrivateLinkage);
+  mod.getFunction("free_term")->setLinkage(llvm::Function::PrivateLinkage);
 }
 
 void State::validate() {
