@@ -87,6 +87,19 @@ llvm::Function *State::initNoopFun() {
   return fun;
 }
 
+llvm::Function *State::initCopyFun() {
+  auto name = "copy";
+
+  llvm::FunctionType *funType = llvm::FunctionType::get(
+    llvm::Type::getVoidTy(context),
+    {llvm::PointerType::get(context, 0), llvm::PointerType::get(context, 0)},
+    false
+  );
+  return llvm::Function::Create(
+    funType, llvm::Function::ExternalLinkage, name, mod
+  );
+}
+
 llvm::Function *State::initFreeFun() {
   auto name = "free";
 
@@ -132,19 +145,6 @@ llvm::Function *State::initPartialNewFun() {
     {llvm::PointerType::get(context, 0),
      llvm::Type::getInt64Ty(context),
      llvm::PointerType::get(context, 0)},
-    false
-  );
-  return llvm::Function::Create(
-    funType, llvm::Function::ExternalLinkage, name, mod
-  );
-}
-
-llvm::Function *State::initCopyFun() {
-  auto name = "copy";
-
-  llvm::FunctionType *funType = llvm::FunctionType::get(
-    llvm::Type::getVoidTy(context),
-    {llvm::PointerType::get(context, 0), llvm::PointerType::get(context, 0)},
     false
   );
   return llvm::Function::Create(
