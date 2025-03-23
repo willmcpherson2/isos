@@ -2,6 +2,8 @@
 
 #include <llvm/IR/LegacyPassManager.h>
 #include <llvm/IR/Verifier.h>
+#include <llvm/IRReader/IRReader.h>
+#include <llvm/Linker/Linker.h>
 #include <llvm/MC/TargetRegistry.h>
 #include <llvm/Passes/PassBuilder.h>
 #include <llvm/Support/FileSystem.h>
@@ -76,15 +78,9 @@ llvm::FunctionType *State::initFunType() {
 llvm::Function *State::initNoopFun() {
   auto name = "noop";
 
-  llvm::Function *fun =
-    llvm::Function::Create(funType, llvm::Function::PrivateLinkage, name, mod);
-
-  llvm::BasicBlock *block = llvm::BasicBlock::Create(context, "entry", fun);
-  builder.emplace(block);
-
-  builder->CreateRetVoid();
-
-  return fun;
+  return llvm::Function::Create(
+    funType, llvm::Function::ExternalLinkage, name, mod
+  );
 }
 
 llvm::Function *State::initCopyFun() {
@@ -152,6 +148,23 @@ llvm::Function *State::initPartialNewFun() {
   );
 }
 
+void State::link() {
+  llvm::SMDiagnostic err;
+  std::unique_ptr<llvm::Module> runtime =
+    llvm::parseIRFile("rt.bc", err, context);
+  if (!runtime) {
+    error = RuntimeLoadFailed;
+    message = err.getMessage();
+    return;
+  }
+
+  bool failed = llvm::Linker::linkModules(mod, std::move(runtime));
+  if (failed) {
+    error = RuntimeLinkFailed;
+    return;
+  }
+}
+
 void State::write() {
   llvm::raw_string_ostream verifyOS(message);
   if (verifyModule(mod, &verifyOS)) {
@@ -192,13 +205,13 @@ void State::write() {
   pass.run(mod);
   objectFile.close();
 
-  int compilerExitCode = std::system("cc -flto -o main rt.o main.o");
+  int compilerExitCode = std::system("cc -o main main.o");
   if (compilerExitCode != 0) {
     std::stringstream stream;
     stream << "process exited with code ";
     stream << compilerExitCode;
     message = stream.str();
-    error = LinkFailed;
+    error = SystemLinkFailed;
     return;
   }
 }
@@ -212,6 +225,8 @@ void State::printError() {
     "Internal compiler error: generated code failed validation",
     "Unable to write to object file",
     "Internal compiler error: object file not supported",
+    "Internal compiler error: failed to load runtime code",
+    "Internal compiler error: failed to link runtime code",
     "Failed to invoke the C compiler on your machine",
   };
 

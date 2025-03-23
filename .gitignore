@@ -3,4 +3,4 @@
 /test
 /main
 /main.o
-/rt.o
+/rt.bc

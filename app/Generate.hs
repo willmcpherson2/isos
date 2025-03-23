@@ -29,7 +29,8 @@ generate prog = do
   mapM_ (genFuns state) prog.funs
   genMain state prog.entry
 
-  [C.exp| void { $(State *state)->print() } |]
+  [C.exp| void { $(State *state)->link() } |]
+  check state
   [C.exp| void { $(State *state)->write() } |]
   check state
 

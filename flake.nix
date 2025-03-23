@@ -15,7 +15,8 @@
         pkgs.haskell.compiler.ghc910
         pkgs.haskellPackages.cabal-fmt
         pkgs.haskellPackages.ormolu
-        pkgs.clang-tools
+        pkgs.llvmPackages_19.clang-tools
+        pkgs.llvmPackages_19.clang
         pkgs.llvmPackages_19.llvm
       ];
       baseShellHook = ''

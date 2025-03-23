@@ -5,8 +5,9 @@ FLAGS = -g -fsanitize=address,undefined,leak
 LDFLAGS = -lLLVM-19
 SRCS = $(SRC)/test.cpp $(SRC)/state.cpp $(SRC)/ops.cpp
 
-RT = rt.o
-RT_FLAGS = -O2
+CC = clang
+RT = rt.bc
+RT_FLAGS = -emit-llvm -O2
 RT_SRCS = $(SRC)/rt.c
 
 OUTPUT = main

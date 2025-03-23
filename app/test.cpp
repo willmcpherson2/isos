@@ -7,6 +7,7 @@
   }
 
 int run(State &state) {
+  state.link();
   state.write();
   CHECK(state);
 

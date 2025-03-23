@@ -10,7 +10,9 @@ enum Error {
   InvalidModule,
   UnableToOpenObjectFile,
   UnableToEmitObjectFile,
-  LinkFailed,
+  RuntimeLoadFailed,
+  RuntimeLinkFailed,
+  SystemLinkFailed,
 };
 
 class State {
@@ -35,6 +37,7 @@ public:
   void match(int var);
   void arm(int symbol);
 
+  void link();
   void write();
   void print();
   void printError();
