@@ -7,8 +7,18 @@
   }
 
 int run(State &state) {
-  state.link();
-  state.write();
+  state.linkRuntime();
+  CHECK(state);
+
+  state.validate();
+  CHECK(state);
+
+  state.optimize();
+
+  state.writeObjectFile();
+  CHECK(state);
+
+  state.linkObjectFile();
   CHECK(state);
 
   return WEXITSTATUS(std::system("./main"));

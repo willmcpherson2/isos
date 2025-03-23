@@ -37,8 +37,11 @@ public:
   void match(int var);
   void arm(int symbol);
 
-  void link();
-  void write();
+  void linkRuntime();
+  void validate();
+  void optimize();
+  void writeObjectFile();
+  void linkObjectFile();
   void print();
   void printError();
   bool ok();

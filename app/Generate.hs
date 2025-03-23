@@ -29,9 +29,18 @@ generate prog = do
   mapM_ (genFuns state) prog.funs
   genMain state prog.entry
 
-  [C.exp| void { $(State *state)->link() } |]
+  [C.exp| void { $(State *state)->linkRuntime() } |]
   check state
-  [C.exp| void { $(State *state)->write() } |]
+
+  [C.exp| void { $(State *state)->validate() } |]
+  check state
+
+  [C.exp| void { $(State *state)->optimize() } |]
+
+  [C.exp| void { $(State *state)->writeObjectFile() } |]
+  check state
+
+  [C.exp| void { $(State *state)->linkObjectFile() } |]
   check state
 
 genData :: Ptr State -> Data -> IO ()

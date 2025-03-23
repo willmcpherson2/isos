@@ -148,7 +148,7 @@ llvm::Function *State::initPartialNewFun() {
   );
 }
 
-void State::link() {
+void State::linkRuntime() {
   llvm::SMDiagnostic err;
   std::unique_ptr<llvm::Module> runtime =
     llvm::parseIRFile("rt.bc", err, context);
@@ -165,13 +165,15 @@ void State::link() {
   }
 }
 
-void State::write() {
+void State::validate() {
   llvm::raw_string_ostream verifyOS(message);
   if (verifyModule(mod, &verifyOS)) {
     error = InvalidModule;
     return;
   }
+}
 
+void State::optimize() {
   llvm::LoopAnalysisManager lam;
   llvm::FunctionAnalysisManager fam;
   llvm::CGSCCAnalysisManager cgam;
@@ -185,7 +187,9 @@ void State::write() {
   llvm::ModulePassManager mpm =
     pb.buildPerModuleDefaultPipeline(llvm::OptimizationLevel::O2);
   mpm.run(mod, mam);
+}
 
+void State::writeObjectFile() {
   std::error_code ec;
   llvm::raw_fd_ostream objectFile("main.o", ec, llvm::sys::fs::OF_None);
   if (ec) {
@@ -204,7 +208,9 @@ void State::write() {
   }
   pass.run(mod);
   objectFile.close();
+}
 
+void State::linkObjectFile() {
   int compilerExitCode = std::system("cc -o main main.o");
   if (compilerExitCode != 0) {
     std::stringstream stream;
