@@ -3,39 +3,52 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define PARTIAL 0
-
 typedef struct Term Term;
 
-typedef struct Term {
+struct Term {
   void (*fun)(Term *);
   Term *args;
   uint32_t symbol;
   uint16_t length;
   uint16_t capacity;
-} Term;
+};
 
 void noop(Term *term) { return; }
 
-void app_new(Term *fun, uint64_t length, Term *args) {
+void app_new(Term *term, uint64_t length, Term *args) {
   uint64_t size = length * sizeof(Term);
-  fun->args = malloc(size);
-  memcpy(fun->args, args, size);
+  term->args = malloc(size);
+  memcpy(term->args, args, size);
 }
 
-void partial_new(Term *fun, uint64_t length, Term *args) {
-  uint16_t capacity = fun->length + 1;
-  Term *new_args = malloc(capacity * sizeof(Term));
-  memcpy(new_args, args, length * sizeof(Term));
-  new_args[capacity - 1] = *fun;
+void partial_new(Term *term, uint64_t length, Term *args) {
+  uint64_t size = length * sizeof(Term);
+  term->args = calloc(length, sizeof(Term));
+  memcpy(term->args, args, size);
 
-  *fun = (Term){
-    .fun = noop,
-    .args = new_args,
-    .symbol = PARTIAL,
-    .length = length,
-    .capacity = capacity,
-  };
+  Term fun = *term;
+  fun.length = 0;
+
+  uint64_t last = term->capacity - 1;
+  term->args[last] = fun;
+
+  term->fun = noop;
+  term->length = length;
+}
+
+void app_partial(Term *term, uint64_t length, Term *args) {
+  uint64_t last = term->capacity - 1;
+  Term fun = term->args[last];
+
+  uint64_t offset = term->length;
+  uint64_t size = length * sizeof(Term);
+  memcpy(term->args + offset, args, size);
+
+  term->length += length;
+
+  if (term->length == term->capacity) {
+    term->fun = fun.fun;
+  }
 }
 
 void copy(Term *dest, Term *src) {
@@ -48,13 +61,8 @@ void copy(Term *dest, Term *src) {
   uint64_t size = src->capacity * sizeof(Term);
   dest->args = malloc(size);
 
-  for (uint64_t arg = 0; arg < src->length; ++arg) {
+  for (uint64_t arg = 0; arg < src->capacity; ++arg) {
     copy(&dest->args[arg], &src->args[arg]);
-  }
-
-  if (src->symbol == PARTIAL) {
-    uint64_t arg = src->capacity - 1;
-    dest->args[arg] = src->args[arg];
   }
 }
 

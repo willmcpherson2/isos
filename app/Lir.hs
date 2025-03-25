@@ -25,6 +25,7 @@ data Op
   | AppFrom {name :: CInt, old :: CInt, var :: CInt, args :: Vector CInt}
   | PartialNew {name :: CInt, var :: CInt, args :: Vector CInt}
   | PartialFrom {name :: CInt, old :: CInt, var :: CInt, args :: Vector CInt}
+  | AppPartial {name :: CInt, var :: CInt, args :: Vector CInt}
   | Match {var :: CInt, arms :: [Arm]}
 
 data Arm = Arm {symbol :: CInt, block :: Block}

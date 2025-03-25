@@ -78,6 +78,9 @@ genOp state = \case
     mArgs <- thaw args
     [C.exp| void { $(State *state)->partialNew($(int name), $(int var), $vec-len:mArgs, $vec-ptr:(int *mArgs)) } |]
   PartialFrom {name, old, var, args} -> error "todo"
+  AppPartial {name, var, args} -> do
+    mArgs <- thaw args
+    [C.exp| void { $(State *state)->appPartial($(int name), $(int var), $vec-len:mArgs, $vec-ptr:(int *mArgs)) } |]
   Match {var, arms} -> do
     [C.exp| void { $(State *state)->match($(int var)) } |]
     mapM_ (genArm state) arms

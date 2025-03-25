@@ -144,12 +144,41 @@ void testNot() {
   assert(result == 2);
 }
 
+void testAppPartial() {
+  State state{};
+  CHECK(state);
+
+  // True
+  state.data(1, 0);
+
+  // id x = x
+  state.function(2, 1);
+  state.loadArg(1, 0, 0);
+  state.freeArgs(0);
+  state.call(2, 1);
+  state.returnTerm(2);
+
+  // f = id
+  // x = f True
+  state.main();
+  state.loadData(1, 1);
+  state.partialNew(2, 1, 0, nullptr);
+  int args[] = {1};
+  state.appPartial(3, 2, 1, args);
+  state.call(4, 3);
+  state.returnSymbol(4);
+
+  int result = run(state);
+  assert(result == 1);
+}
+
 int main() {
   testReturnSymbol();
   testCopy();
   testIdentity();
   testMatch();
   testNot();
+  testAppPartial();
 
   return 0;
 }

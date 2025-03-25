@@ -22,6 +22,7 @@ State::State()
     freeTermFun(initFreeTermFun()),
     appNewFun(initAppNewFun()),
     partialNewFun(initPartialNewFun()),
+    appPartialFun(initAppPartialFun()),
     copyFun(initCopyFun()) {}
 
 llvm::Module State::initMod() {
@@ -148,6 +149,21 @@ llvm::Function *State::initPartialNewFun() {
   );
 }
 
+llvm::Function *State::initAppPartialFun() {
+  auto name = "app_partial";
+
+  llvm::FunctionType *funType = llvm::FunctionType::get(
+    llvm::Type::getVoidTy(context),
+    {llvm::PointerType::get(context, 0),
+     llvm::Type::getInt64Ty(context),
+     llvm::PointerType::get(context, 0)},
+    false
+  );
+  return llvm::Function::Create(
+    funType, llvm::Function::ExternalLinkage, name, mod
+  );
+}
+
 void State::linkRuntime() {
   llvm::SMDiagnostic err;
   std::unique_ptr<llvm::Module> runtime =
@@ -167,6 +183,7 @@ void State::linkRuntime() {
   mod.getFunction("noop")->setLinkage(llvm::Function::PrivateLinkage);
   mod.getFunction("app_new")->setLinkage(llvm::Function::PrivateLinkage);
   mod.getFunction("partial_new")->setLinkage(llvm::Function::PrivateLinkage);
+  mod.getFunction("app_partial")->setLinkage(llvm::Function::PrivateLinkage);
   mod.getFunction("copy")->setLinkage(llvm::Function::PrivateLinkage);
   mod.getFunction("free_term")->setLinkage(llvm::Function::PrivateLinkage);
 }
