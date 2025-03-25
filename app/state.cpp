@@ -18,12 +18,12 @@ State::State()
     termType(initTermType()),
     funType(initFunType()),
     noopFun(initNoopFun()),
-    freeFun(initFreeFun()),
-    freeTermFun(initFreeTermFun()),
     newAppFun(initNewAppFun()),
     newPartialFun(initNewPartialFun()),
     appPartialFun(initAppPartialFun()),
-    copyFun(initCopyFun()) {}
+    copyFun(initCopyFun()),
+    freeFun(initFreeFun()),
+    freeTermFun(initFreeTermFun()) {}
 
 llvm::Module State::initMod() {
   llvm::InitializeAllTargetInfos();
@@ -84,41 +84,6 @@ llvm::Function *State::initNoopFun() {
   );
 }
 
-llvm::Function *State::initCopyFun() {
-  auto name = "copy";
-
-  llvm::FunctionType *funType = llvm::FunctionType::get(
-    llvm::Type::getVoidTy(context),
-    {llvm::PointerType::get(context, 0), llvm::PointerType::get(context, 0)},
-    false
-  );
-  return llvm::Function::Create(
-    funType, llvm::Function::ExternalLinkage, name, mod
-  );
-}
-
-llvm::Function *State::initFreeFun() {
-  auto name = "free";
-
-  llvm::FunctionType *funType = llvm::FunctionType::get(
-    llvm::Type::getVoidTy(context), {llvm::PointerType::get(context, 0)}, false
-  );
-  return llvm::Function::Create(
-    funType, llvm::Function::ExternalLinkage, name, mod
-  );
-}
-
-llvm::Function *State::initFreeTermFun() {
-  auto name = "freeTerm";
-
-  llvm::FunctionType *funType = llvm::FunctionType::get(
-    llvm::Type::getVoidTy(context), {llvm::PointerType::get(context, 0)}, false
-  );
-  return llvm::Function::Create(
-    funType, llvm::Function::ExternalLinkage, name, mod
-  );
-}
-
 llvm::Function *State::initNewAppFun() {
   auto name = "newApp";
 
@@ -158,6 +123,41 @@ llvm::Function *State::initAppPartialFun() {
      llvm::Type::getInt64Ty(context),
      llvm::PointerType::get(context, 0)},
     false
+  );
+  return llvm::Function::Create(
+    funType, llvm::Function::ExternalLinkage, name, mod
+  );
+}
+
+llvm::Function *State::initCopyFun() {
+  auto name = "copy";
+
+  llvm::FunctionType *funType = llvm::FunctionType::get(
+    llvm::Type::getVoidTy(context),
+    {llvm::PointerType::get(context, 0), llvm::PointerType::get(context, 0)},
+    false
+  );
+  return llvm::Function::Create(
+    funType, llvm::Function::ExternalLinkage, name, mod
+  );
+}
+
+llvm::Function *State::initFreeFun() {
+  auto name = "free";
+
+  llvm::FunctionType *funType = llvm::FunctionType::get(
+    llvm::Type::getVoidTy(context), {llvm::PointerType::get(context, 0)}, false
+  );
+  return llvm::Function::Create(
+    funType, llvm::Function::ExternalLinkage, name, mod
+  );
+}
+
+llvm::Function *State::initFreeTermFun() {
+  auto name = "freeTerm";
+
+  llvm::FunctionType *funType = llvm::FunctionType::get(
+    llvm::Type::getVoidTy(context), {llvm::PointerType::get(context, 0)}, false
   );
   return llvm::Function::Create(
     funType, llvm::Function::ExternalLinkage, name, mod

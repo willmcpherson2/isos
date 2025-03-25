@@ -65,52 +65,6 @@ void State::loadArg(int name, int var, int i) {
   locals.insert({name, argAlloca});
 }
 
-void State::copy(int name, int var) {
-  llvm::AllocaInst *dest = builder->CreateAlloca(termType, nullptr);
-  llvm::AllocaInst *src = locals[var];
-  builder->CreateCall(copyFun, {dest, src});
-  locals.insert({name, dest});
-}
-
-void State::call(int name, int var) {
-  llvm::AllocaInst *term = locals[var];
-
-  llvm::LoadInst *termLoad = builder->CreateLoad(termType, term);
-  llvm::Value *fun = builder->CreateExtractValue(termLoad, 0);
-  llvm::AllocaInst *termAlloca = builder->CreateAlloca(termType, nullptr);
-  builder->CreateStore(termLoad, termAlloca);
-  builder->CreateCall(funType, fun, {termAlloca});
-
-  locals.insert({name, termAlloca});
-}
-
-void State::returnTerm(int var) {
-  llvm::AllocaInst *term = locals[var];
-  llvm::LoadInst *termLoad = builder->CreateLoad(termType, term);
-  builder->CreateStore(termLoad, argument);
-  builder->CreateRetVoid();
-}
-
-void State::returnSymbol(int var) {
-  llvm::AllocaInst *term = locals[var];
-  llvm::LoadInst *termLoad = builder->CreateLoad(termType, term);
-  llvm::Value *symbol = builder->CreateExtractValue(termLoad, 2);
-  builder->CreateRet(symbol);
-}
-
-void State::freeArgs(int var) {
-  llvm::AllocaInst *term = locals[var];
-
-  llvm::LoadInst *termLoad = builder->CreateLoad(termType, term);
-  llvm::Value *argsField = builder->CreateExtractValue(termLoad, 1);
-  builder->CreateCall(freeFun, {argsField});
-}
-
-void State::freeTerm(int var) {
-  llvm::AllocaInst *term = locals[var];
-  builder->CreateCall(freeTermFun, {term});
-}
-
 void State::newApp(int name, int var, int length, int *args) {
   llvm::AllocaInst *term = locals[var];
 
@@ -211,6 +165,52 @@ void State::appPartial(int name, int var, int length, int *args) {
   builder->CreateCall(appPartialFun, argValues);
 
   locals.insert({name, termAlloca});
+}
+
+void State::copy(int name, int var) {
+  llvm::AllocaInst *dest = builder->CreateAlloca(termType, nullptr);
+  llvm::AllocaInst *src = locals[var];
+  builder->CreateCall(copyFun, {dest, src});
+  locals.insert({name, dest});
+}
+
+void State::freeArgs(int var) {
+  llvm::AllocaInst *term = locals[var];
+
+  llvm::LoadInst *termLoad = builder->CreateLoad(termType, term);
+  llvm::Value *argsField = builder->CreateExtractValue(termLoad, 1);
+  builder->CreateCall(freeFun, {argsField});
+}
+
+void State::freeTerm(int var) {
+  llvm::AllocaInst *term = locals[var];
+  builder->CreateCall(freeTermFun, {term});
+}
+
+void State::call(int name, int var) {
+  llvm::AllocaInst *term = locals[var];
+
+  llvm::LoadInst *termLoad = builder->CreateLoad(termType, term);
+  llvm::Value *fun = builder->CreateExtractValue(termLoad, 0);
+  llvm::AllocaInst *termAlloca = builder->CreateAlloca(termType, nullptr);
+  builder->CreateStore(termLoad, termAlloca);
+  builder->CreateCall(funType, fun, {termAlloca});
+
+  locals.insert({name, termAlloca});
+}
+
+void State::returnTerm(int var) {
+  llvm::AllocaInst *term = locals[var];
+  llvm::LoadInst *termLoad = builder->CreateLoad(termType, term);
+  builder->CreateStore(termLoad, argument);
+  builder->CreateRetVoid();
+}
+
+void State::returnSymbol(int var) {
+  llvm::AllocaInst *term = locals[var];
+  llvm::LoadInst *termLoad = builder->CreateLoad(termType, term);
+  llvm::Value *symbol = builder->CreateExtractValue(termLoad, 2);
+  builder->CreateRet(symbol);
 }
 
 void State::match(int var) {

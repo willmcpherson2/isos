@@ -24,15 +24,15 @@ public:
   void function(int symbol, int arity);
   void loadData(int name, int symbol);
   void loadArg(int name, int var, int i);
-  void copy(int name, int var);
-  void call(int name, int var);
-  void returnTerm(int var);
-  void returnSymbol(int var);
-  void freeArgs(int var);
-  void freeTerm(int var);
   void newApp(int name, int var, int length, int *args);
   void newPartial(int name, int var, int length, int *args);
   void appPartial(int name, int var, int length, int *args);
+  void copy(int name, int var);
+  void freeArgs(int var);
+  void freeTerm(int var);
+  void call(int name, int var);
+  void returnTerm(int var);
+  void returnSymbol(int var);
   void match(int var);
   void arm(int symbol);
 
@@ -54,27 +54,29 @@ private:
   llvm::StructType *initTermType();
   llvm::FunctionType *initFunType();
   llvm::Function *initNoopFun();
-  llvm::Function *initCopyFun();
-  llvm::Function *initFreeFun();
-  llvm::Function *initFreeTermFun();
   llvm::Function *initNewAppFun();
   llvm::Function *initNewPartialFun();
   llvm::Function *initAppPartialFun();
+  llvm::Function *initCopyFun();
+  llvm::Function *initFreeFun();
+  llvm::Function *initFreeTermFun();
 
   void addGlobal(std::string name, llvm::Function *fun, int symbol, int arity);
 
   llvm::LLVMContext context;
   llvm::Module mod;
   std::unique_ptr<llvm::TargetMachine> targetMachine;
+
   llvm::StructType *termType = nullptr;
   llvm::FunctionType *funType = nullptr;
   llvm::Function *noopFun = nullptr;
-  llvm::Function *copyFun = nullptr;
-  llvm::Function *freeFun = nullptr;
-  llvm::Function *freeTermFun = nullptr;
   llvm::Function *newAppFun = nullptr;
   llvm::Function *newPartialFun = nullptr;
   llvm::Function *appPartialFun = nullptr;
+  llvm::Function *copyFun = nullptr;
+  llvm::Function *freeFun = nullptr;
+  llvm::Function *freeTermFun = nullptr;
+
   std::optional<llvm::IRBuilder<>> builder;
   std::unordered_map<int, llvm::GlobalVariable *> globals;
   llvm::Function *fun = nullptr;

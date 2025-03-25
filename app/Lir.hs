@@ -15,15 +15,15 @@ type Block = [Op]
 data Op
   = LoadData {name :: CInt, symbol :: CInt}
   | LoadArg {name :: CInt, var :: CInt, arg :: CInt}
-  | Copy {name :: CInt, var :: CInt}
-  | Call {name :: CInt, var :: CInt}
-  | ReturnTerm {var :: CInt}
-  | ReturnSymbol {var :: CInt}
-  | FreeArgs {var :: CInt}
-  | FreeTerm {var :: CInt}
   | NewApp {name :: CInt, var :: CInt, args :: Vector CInt}
   | NewPartial {name :: CInt, var :: CInt, args :: Vector CInt}
   | AppPartial {name :: CInt, var :: CInt, args :: Vector CInt}
+  | Copy {name :: CInt, var :: CInt}
+  | FreeArgs {var :: CInt}
+  | FreeTerm {var :: CInt}
+  | Call {name :: CInt, var :: CInt}
+  | ReturnTerm {var :: CInt}
+  | ReturnSymbol {var :: CInt}
   | Match {var :: CInt, arms :: [Arm]}
 
 data Arm = Arm {symbol :: CInt, block :: Block}

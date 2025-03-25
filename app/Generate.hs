@@ -64,12 +64,6 @@ genOp :: Ptr State -> Op -> IO ()
 genOp state = \case
   LoadData {name, symbol} -> [C.exp| void { $(State *state)->loadData($(int name), $(int symbol)) } |]
   LoadArg {name, var, arg} -> [C.exp| void { $(State *state)->loadArg($(int name), $(int var), $(int arg)) } |]
-  Copy {name, var} -> [C.exp| void { $(State *state)->copy($(int name), $(int var)) } |]
-  Call {name, var} -> [C.exp| void { $(State *state)->call($(int name), $(int var)) } |]
-  ReturnTerm {var} -> [C.exp| void { $(State *state)->returnTerm($(int var)) } |]
-  ReturnSymbol {var} -> [C.exp| void { $(State *state)->returnSymbol($(int var)) } |]
-  FreeArgs {var} -> [C.exp| void { $(State *state)->freeArgs($(int var)) } |]
-  FreeTerm {var} -> [C.exp| void { $(State *state)->freeTerm($(int var)) } |]
   NewApp {name, var, args} -> do
     mArgs <- thaw args
     [C.exp| void { $(State *state)->newApp($(int name), $(int var), $vec-len:mArgs, $vec-ptr:(int *mArgs)) } |]
@@ -79,6 +73,12 @@ genOp state = \case
   AppPartial {name, var, args} -> do
     mArgs <- thaw args
     [C.exp| void { $(State *state)->appPartial($(int name), $(int var), $vec-len:mArgs, $vec-ptr:(int *mArgs)) } |]
+  Copy {name, var} -> [C.exp| void { $(State *state)->copy($(int name), $(int var)) } |]
+  FreeArgs {var} -> [C.exp| void { $(State *state)->freeArgs($(int var)) } |]
+  FreeTerm {var} -> [C.exp| void { $(State *state)->freeTerm($(int var)) } |]
+  Call {name, var} -> [C.exp| void { $(State *state)->call($(int name), $(int var)) } |]
+  ReturnTerm {var} -> [C.exp| void { $(State *state)->returnTerm($(int var)) } |]
+  ReturnSymbol {var} -> [C.exp| void { $(State *state)->returnSymbol($(int var)) } |]
   Match {var, arms} -> do
     [C.exp| void { $(State *state)->match($(int var)) } |]
     mapM_ (genArm state) arms
