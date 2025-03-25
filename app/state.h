@@ -30,8 +30,8 @@ public:
   void returnSymbol(int var);
   void freeArgs(int var);
   void freeTerm(int var);
-  void appNew(int name, int var, int length, int *args);
-  void partialNew(int name, int var, int length, int *args);
+  void newApp(int name, int var, int length, int *args);
+  void newPartial(int name, int var, int length, int *args);
   void appPartial(int name, int var, int length, int *args);
   void match(int var);
   void arm(int symbol);
@@ -57,8 +57,8 @@ private:
   llvm::Function *initCopyFun();
   llvm::Function *initFreeFun();
   llvm::Function *initFreeTermFun();
-  llvm::Function *initAppNewFun();
-  llvm::Function *initPartialNewFun();
+  llvm::Function *initNewAppFun();
+  llvm::Function *initNewPartialFun();
   llvm::Function *initAppPartialFun();
 
   void addGlobal(std::string name, llvm::Function *fun, int symbol, int arity);
@@ -72,8 +72,8 @@ private:
   llvm::Function *copyFun = nullptr;
   llvm::Function *freeFun = nullptr;
   llvm::Function *freeTermFun = nullptr;
-  llvm::Function *appNewFun = nullptr;
-  llvm::Function *partialNewFun = nullptr;
+  llvm::Function *newAppFun = nullptr;
+  llvm::Function *newPartialFun = nullptr;
   llvm::Function *appPartialFun = nullptr;
   std::optional<llvm::IRBuilder<>> builder;
   std::unordered_map<int, llvm::GlobalVariable *> globals;

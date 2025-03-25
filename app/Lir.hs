@@ -21,8 +21,8 @@ data Op
   | ReturnSymbol {var :: CInt}
   | FreeArgs {var :: CInt}
   | FreeTerm {var :: CInt}
-  | AppNew {name :: CInt, var :: CInt, args :: Vector CInt}
-  | PartialNew {name :: CInt, var :: CInt, args :: Vector CInt}
+  | NewApp {name :: CInt, var :: CInt, args :: Vector CInt}
+  | NewPartial {name :: CInt, var :: CInt, args :: Vector CInt}
   | AppPartial {name :: CInt, var :: CInt, args :: Vector CInt}
   | Match {var :: CInt, arms :: [Arm]}
 

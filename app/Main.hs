@@ -25,7 +25,7 @@ main = do
           -- main = id True
           [ LoadData 1 3, -- 1 = id
             LoadData 2 1, -- 2 = True
-            AppNew 3 1 [2], -- 3 = appNew(1, 2)
+            NewApp 3 1 [2], -- 3 = newApp(1, 2)
             Call 4 3, -- 4 = 3.fun(3)
             ReturnSymbol 4 -- return 4.symbol
           ]

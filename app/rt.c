@@ -15,13 +15,13 @@ struct Term {
 
 void noop(Term *term) { return; }
 
-void app_new(Term *term, uint64_t length, Term *args) {
+void new_app(Term *term, uint64_t length, Term *args) {
   uint64_t size = length * sizeof(Term);
   term->args = malloc(size);
   memcpy(term->args, args, size);
 }
 
-void partial_new(Term *term, uint64_t length, Term *args) {
+void new_partial(Term *term, uint64_t length, Term *args) {
   uint64_t size = length * sizeof(Term);
   term->args = calloc(length, sizeof(Term));
   memcpy(term->args, args, size);

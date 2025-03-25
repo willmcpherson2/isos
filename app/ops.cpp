@@ -111,7 +111,7 @@ void State::freeTerm(int var) {
   builder->CreateCall(freeTermFun, {term});
 }
 
-void State::appNew(int name, int var, int length, int *args) {
+void State::newApp(int name, int var, int length, int *args) {
   llvm::AllocaInst *term = locals[var];
 
   llvm::LoadInst *termLoad = builder->CreateLoad(termType, term);
@@ -140,12 +140,12 @@ void State::appNew(int name, int var, int length, int *args) {
   argValues.push_back(termAlloca);
   argValues.push_back(lengthConstant);
   argValues.push_back(argsAlloca);
-  builder->CreateCall(appNewFun, argValues);
+  builder->CreateCall(newAppFun, argValues);
 
   locals.insert({name, termAlloca});
 }
 
-void State::partialNew(int name, int var, int length, int *args) {
+void State::newPartial(int name, int var, int length, int *args) {
   llvm::AllocaInst *term = locals[var];
 
   llvm::LoadInst *termLoad = builder->CreateLoad(termType, term);
@@ -174,7 +174,7 @@ void State::partialNew(int name, int var, int length, int *args) {
   argValues.push_back(termAlloca);
   argValues.push_back(lengthConstant);
   argValues.push_back(argsAlloca);
-  builder->CreateCall(partialNewFun, argValues);
+  builder->CreateCall(newPartialFun, argValues);
 
   locals.insert({name, termAlloca});
 }

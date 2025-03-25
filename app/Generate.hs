@@ -70,12 +70,12 @@ genOp state = \case
   ReturnSymbol {var} -> [C.exp| void { $(State *state)->returnSymbol($(int var)) } |]
   FreeArgs {var} -> [C.exp| void { $(State *state)->freeArgs($(int var)) } |]
   FreeTerm {var} -> [C.exp| void { $(State *state)->freeTerm($(int var)) } |]
-  AppNew {name, var, args} -> do
+  NewApp {name, var, args} -> do
     mArgs <- thaw args
-    [C.exp| void { $(State *state)->appNew($(int name), $(int var), $vec-len:mArgs, $vec-ptr:(int *mArgs)) } |]
-  PartialNew {name, var, args} -> do
+    [C.exp| void { $(State *state)->newApp($(int name), $(int var), $vec-len:mArgs, $vec-ptr:(int *mArgs)) } |]
+  NewPartial {name, var, args} -> do
     mArgs <- thaw args
-    [C.exp| void { $(State *state)->partialNew($(int name), $(int var), $vec-len:mArgs, $vec-ptr:(int *mArgs)) } |]
+    [C.exp| void { $(State *state)->newPartial($(int name), $(int var), $vec-len:mArgs, $vec-ptr:(int *mArgs)) } |]
   AppPartial {name, var, args} -> do
     mArgs <- thaw args
     [C.exp| void { $(State *state)->appPartial($(int name), $(int var), $vec-len:mArgs, $vec-ptr:(int *mArgs)) } |]

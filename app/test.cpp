@@ -79,7 +79,7 @@ void testIdentity() {
   state.loadData(1, 3);        // 1 = id
   state.loadData(2, 1);        // 2 = True
   int args[] = {2};            //
-  state.appNew(3, 1, 1, args); // 3 = app_new(1, 2)
+  state.newApp(3, 1, 1, args); // 3 = new_app(1, 2)
   state.call(4, 3);            // 4 = 3.fun(3)
   state.returnSymbol(4);       // return 4
 
@@ -136,7 +136,7 @@ void testNot() {
   state.loadData(1, 3);
   state.loadData(2, 1);
   int args[] = {2};
-  state.appNew(3, 1, 1, args);
+  state.newApp(3, 1, 1, args);
   state.call(4, 3);
   state.returnSymbol(4);
 
@@ -162,7 +162,7 @@ void testAppPartial() {
   // x = f True
   state.main();
   state.loadData(1, 1);
-  state.partialNew(2, 1, 0, nullptr);
+  state.newPartial(2, 1, 0, nullptr);
   int args[] = {1};
   state.appPartial(3, 2, 1, args);
   state.call(4, 3);
