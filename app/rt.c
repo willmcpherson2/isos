@@ -15,13 +15,13 @@ struct Term {
 
 void noop(Term *term) { return; }
 
-void new_app(Term *term, uint64_t length, Term *args) {
+void newApp(Term *term, uint64_t length, Term *args) {
   uint64_t size = length * sizeof(Term);
   term->args = malloc(size);
   memcpy(term->args, args, size);
 }
 
-void new_partial(Term *term, uint64_t length, Term *args) {
+void newPartial(Term *term, uint64_t length, Term *args) {
   uint64_t size = length * sizeof(Term);
   term->args = calloc(length, sizeof(Term));
   memcpy(term->args, args, size);
@@ -36,7 +36,7 @@ void new_partial(Term *term, uint64_t length, Term *args) {
   term->length = length;
 }
 
-void app_partial(Term *term, uint64_t length, Term *args) {
+void appPartial(Term *term, uint64_t length, Term *args) {
   uint64_t last = term->capacity - 1;
   Term fun = term->args[last];
 
@@ -66,9 +66,9 @@ void copy(Term *dest, Term *src) {
   }
 }
 
-void free_term(Term *term) {
+void freeTerm(Term *term) {
   for (uint64_t arg = 0; arg < term->length; ++arg) {
-    free_term(&term->args[arg]);
+    freeTerm(&term->args[arg]);
   }
   free(term->args);
 }
