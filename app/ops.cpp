@@ -15,12 +15,12 @@ void State::main() {
 }
 
 void State::data(int symbol, int arity) {
-  auto name = "data_" + std::to_string(symbol);
+  auto name = "data" + std::to_string(symbol);
   addGlobal(name, noopFun, symbol, arity);
 }
 
 void State::function(int symbol, int arity) {
-  auto funName = "fun_" + std::to_string(symbol);
+  auto funName = "fun" + std::to_string(symbol);
 
   fun = llvm::Function::Create(
     funType, llvm::Function::PrivateLinkage, funName, mod
@@ -36,7 +36,7 @@ void State::function(int symbol, int arity) {
   locals.clear();
   locals.insert({0, argAlloca});
 
-  auto name = "data_" + std::to_string(symbol);
+  auto name = "data" + std::to_string(symbol);
   addGlobal(name, fun, symbol, arity);
 }
 
