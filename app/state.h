@@ -61,6 +61,7 @@ private:
   llvm::Function *initFreeFun();
   llvm::Function *initFreeTermFun();
 
+  void callApp(llvm::Function *fun, int name, int var, int length, int *args);
   void addGlobal(std::string name, llvm::Function *fun, int symbol, int arity);
 
   llvm::LLVMContext context;

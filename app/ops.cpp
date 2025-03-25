@@ -66,105 +66,15 @@ void State::loadArg(int name, int var, int i) {
 }
 
 void State::newApp(int name, int var, int length, int *args) {
-  llvm::AllocaInst *term = locals[var];
-
-  llvm::LoadInst *termLoad = builder->CreateLoad(termType, term);
-  llvm::AllocaInst *termAlloca = builder->CreateAlloca(termType, nullptr);
-  builder->CreateStore(termLoad, termAlloca);
-
-  llvm::ConstantInt *lengthConstant =
-    llvm::ConstantInt::get(llvm::Type::getInt64Ty(context), length);
-
-  llvm::ArrayType *argsType = llvm::ArrayType::get(termType, length);
-  llvm::AllocaInst *argsAlloca = builder->CreateAlloca(argsType, nullptr);
-  for (int i = 0; i < length; ++i) {
-    int arg = args[i];
-    llvm::AllocaInst *argLocal = locals[arg];
-    llvm::LoadInst *argLoad = builder->CreateLoad(termType, argLocal);
-    llvm::Value *argGep = builder->CreateGEP(
-      argsType,
-      argsAlloca,
-      {llvm::ConstantInt::get(llvm::Type::getInt32Ty(context), 0),
-       llvm::ConstantInt::get(llvm::Type::getInt32Ty(context), i)}
-    );
-    builder->CreateStore(argLoad, argGep);
-  }
-
-  std::vector<llvm::Value *> argValues;
-  argValues.push_back(termAlloca);
-  argValues.push_back(lengthConstant);
-  argValues.push_back(argsAlloca);
-  builder->CreateCall(newAppFun, argValues);
-
-  locals.insert({name, termAlloca});
+  callApp(newAppFun, name, var, length, args);
 }
 
 void State::newPartial(int name, int var, int length, int *args) {
-  llvm::AllocaInst *term = locals[var];
-
-  llvm::LoadInst *termLoad = builder->CreateLoad(termType, term);
-  llvm::AllocaInst *termAlloca = builder->CreateAlloca(termType, nullptr);
-  builder->CreateStore(termLoad, termAlloca);
-
-  llvm::ConstantInt *lengthConstant =
-    llvm::ConstantInt::get(llvm::Type::getInt64Ty(context), length);
-
-  llvm::ArrayType *argsType = llvm::ArrayType::get(termType, length);
-  llvm::AllocaInst *argsAlloca = builder->CreateAlloca(argsType, nullptr);
-  for (int i = 0; i < length; ++i) {
-    int arg = args[i];
-    llvm::AllocaInst *argLocal = locals[arg];
-    llvm::LoadInst *argLoad = builder->CreateLoad(termType, argLocal);
-    llvm::Value *argGep = builder->CreateGEP(
-      argsType,
-      argsAlloca,
-      {llvm::ConstantInt::get(llvm::Type::getInt32Ty(context), 0),
-       llvm::ConstantInt::get(llvm::Type::getInt32Ty(context), i)}
-    );
-    builder->CreateStore(argLoad, argGep);
-  }
-
-  std::vector<llvm::Value *> argValues;
-  argValues.push_back(termAlloca);
-  argValues.push_back(lengthConstant);
-  argValues.push_back(argsAlloca);
-  builder->CreateCall(newPartialFun, argValues);
-
-  locals.insert({name, termAlloca});
+  callApp(newPartialFun, name, var, length, args);
 }
 
 void State::appPartial(int name, int var, int length, int *args) {
-  llvm::AllocaInst *term = locals[var];
-
-  llvm::LoadInst *termLoad = builder->CreateLoad(termType, term);
-  llvm::AllocaInst *termAlloca = builder->CreateAlloca(termType, nullptr);
-  builder->CreateStore(termLoad, termAlloca);
-
-  llvm::ConstantInt *lengthConstant =
-    llvm::ConstantInt::get(llvm::Type::getInt64Ty(context), length);
-
-  llvm::ArrayType *argsType = llvm::ArrayType::get(termType, length);
-  llvm::AllocaInst *argsAlloca = builder->CreateAlloca(argsType, nullptr);
-  for (int i = 0; i < length; ++i) {
-    int arg = args[i];
-    llvm::AllocaInst *argLocal = locals[arg];
-    llvm::LoadInst *argLoad = builder->CreateLoad(termType, argLocal);
-    llvm::Value *argGep = builder->CreateGEP(
-      argsType,
-      argsAlloca,
-      {llvm::ConstantInt::get(llvm::Type::getInt32Ty(context), 0),
-       llvm::ConstantInt::get(llvm::Type::getInt32Ty(context), i)}
-    );
-    builder->CreateStore(argLoad, argGep);
-  }
-
-  std::vector<llvm::Value *> argValues;
-  argValues.push_back(termAlloca);
-  argValues.push_back(lengthConstant);
-  argValues.push_back(argsAlloca);
-  builder->CreateCall(appPartialFun, argValues);
-
-  locals.insert({name, termAlloca});
+  callApp(appPartialFun, name, var, length, args);
 }
 
 void State::copy(int name, int var) {
@@ -232,6 +142,46 @@ void State::arm(int symbol) {
     llvm::BasicBlock::Create(context, std::to_string(symbol), fun);
   swit->addCase(symbolConstant, armBlock);
   builder->SetInsertPoint(armBlock);
+}
+
+void State::callApp(
+  llvm::Function *fun,
+  int name,
+  int var,
+  int length,
+  int *args
+) {
+  llvm::AllocaInst *term = locals[var];
+
+  llvm::LoadInst *termLoad = builder->CreateLoad(termType, term);
+  llvm::AllocaInst *termAlloca = builder->CreateAlloca(termType, nullptr);
+  builder->CreateStore(termLoad, termAlloca);
+
+  llvm::ConstantInt *lengthConstant =
+    llvm::ConstantInt::get(llvm::Type::getInt64Ty(context), length);
+
+  llvm::ArrayType *argsType = llvm::ArrayType::get(termType, length);
+  llvm::AllocaInst *argsAlloca = builder->CreateAlloca(argsType, nullptr);
+  for (int i = 0; i < length; ++i) {
+    int arg = args[i];
+    llvm::AllocaInst *argLocal = locals[arg];
+    llvm::LoadInst *argLoad = builder->CreateLoad(termType, argLocal);
+    llvm::Value *argGep = builder->CreateGEP(
+      argsType,
+      argsAlloca,
+      {llvm::ConstantInt::get(llvm::Type::getInt32Ty(context), 0),
+       llvm::ConstantInt::get(llvm::Type::getInt32Ty(context), i)}
+    );
+    builder->CreateStore(argLoad, argGep);
+  }
+
+  std::vector<llvm::Value *> argValues;
+  argValues.push_back(termAlloca);
+  argValues.push_back(lengthConstant);
+  argValues.push_back(argsAlloca);
+  builder->CreateCall(fun, argValues);
+
+  locals.insert({name, termAlloca});
 }
 
 void State::addGlobal(
