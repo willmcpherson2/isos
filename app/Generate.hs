@@ -37,11 +37,8 @@ generate prog = do
 
   [C.exp| void { $(State *state)->optimize() } |]
 
-  [C.exp| void { $(State *state)->writeObjectFile() } |]
-  check state
-
-  [C.exp| void { $(State *state)->linkObjectFile() } |]
-  check state
+  result <- [C.exp| int { $(State *state)->jit() } |]
+  putStrLn $ "main: " <> show result
 
 genData :: Ptr State -> Data -> IO ()
 genData state Data {symbol, arity} =

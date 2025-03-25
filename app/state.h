@@ -41,6 +41,7 @@ public:
   void optimize();
   void writeObjectFile();
   void linkObjectFile();
+  int32_t jit();
   void print();
   void printError();
   bool ok();
@@ -49,7 +50,7 @@ public:
   std::string message;
 
 private:
-  llvm::Module initMod();
+  std::unique_ptr<llvm::Module> initMod();
   std::unique_ptr<llvm::TargetMachine> initTargetMachine();
   llvm::StructType *initTermType();
   llvm::FunctionType *initFunType();
@@ -65,7 +66,7 @@ private:
   void addGlobal(std::string name, llvm::Function *fun, int symbol, int arity);
 
   llvm::LLVMContext context;
-  llvm::Module mod;
+  std::unique_ptr<llvm::Module> mod;
   std::unique_ptr<llvm::TargetMachine> targetMachine;
 
   llvm::StructType *termType = nullptr;

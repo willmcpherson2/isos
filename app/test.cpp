@@ -6,7 +6,7 @@
     assert(false);                                                             \
   }
 
-int run(State &state) {
+int32_t run(State &state) {
   state.linkRuntime();
   CHECK(state);
 
@@ -15,13 +15,7 @@ int run(State &state) {
 
   state.optimize();
 
-  state.writeObjectFile();
-  CHECK(state);
-
-  state.linkObjectFile();
-  CHECK(state);
-
-  return WEXITSTATUS(std::system("./main"));
+  return state.jit();
 }
 
 void testReturnSymbol() {
@@ -36,8 +30,7 @@ void testReturnSymbol() {
   state.loadData(1, 1);
   state.returnSymbol(1);
 
-  int result = run(state);
-  assert(result == 1);
+  assert(run(state) == 1);
 }
 
 void testCopy() {
@@ -54,8 +47,7 @@ void testCopy() {
   state.freeTerm(2);
   state.returnSymbol(2);
 
-  int result = run(state);
-  assert(result == 1);
+  assert(run(state) == 1);
 }
 
 void testIdentity() {
@@ -83,8 +75,7 @@ void testIdentity() {
   state.call(4, 3);
   state.returnSymbol(4);
 
-  int result = run(state);
-  assert(result == 1);
+  assert(run(state) == 1);
 }
 
 void testMatch() {
@@ -105,8 +96,7 @@ void testMatch() {
   state.arm(2);
   state.returnSymbol(2);
 
-  int result = run(state);
-  assert(result == 1);
+  assert(run(state) == 1);
 }
 
 void testNot() {
@@ -140,8 +130,7 @@ void testNot() {
   state.call(4, 3);
   state.returnSymbol(4);
 
-  int result = run(state);
-  assert(result == 2);
+  assert(run(state) == 2);
 }
 
 void testAppPartial() {
@@ -168,8 +157,7 @@ void testAppPartial() {
   state.call(4, 3);
   state.returnSymbol(4);
 
-  int result = run(state);
-  assert(result == 1);
+  assert(run(state) == 1);
 }
 
 int main() {

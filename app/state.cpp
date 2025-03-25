@@ -1,5 +1,6 @@
 #include "state.h"
 
+#include <llvm/ExecutionEngine/Orc/LLJIT.h>
 #include <llvm/IR/LegacyPassManager.h>
 #include <llvm/IR/Verifier.h>
 #include <llvm/IRReader/IRReader.h>
@@ -25,18 +26,18 @@ State::State()
     freeFun(initFreeFun()),
     freeTermFun(initFreeTermFun()) {}
 
-llvm::Module State::initMod() {
+std::unique_ptr<llvm::Module> State::initMod() {
   llvm::InitializeAllTargetInfos();
   llvm::InitializeAllTargets();
   llvm::InitializeAllTargetMCs();
   llvm::InitializeAllAsmPrinters();
 
-  return llvm::Module("main", context);
+  return std::make_unique<llvm::Module>("main", context);
 }
 
 std::unique_ptr<llvm::TargetMachine> State::initTargetMachine() {
   std::string targetTriple = llvm::sys::getDefaultTargetTriple();
-  mod.setTargetTriple(targetTriple);
+  mod->setTargetTriple(targetTriple);
 
   auto target = llvm::TargetRegistry::lookupTarget(targetTriple, message);
   if (!target) {
@@ -52,7 +53,7 @@ std::unique_ptr<llvm::TargetMachine> State::initTargetMachine() {
     target->createTargetMachine(targetTriple, cpu, features, opt, rm)
   );
 
-  mod.setDataLayout(targetMachine->createDataLayout());
+  mod->setDataLayout(targetMachine->createDataLayout());
 
   return targetMachine;
 }
@@ -78,7 +79,7 @@ llvm::FunctionType *State::initFunType() {
 
 llvm::Function *State::initNoopFun() {
   return llvm::Function::Create(
-    funType, llvm::Function::ExternalLinkage, "noop", mod
+    funType, llvm::Function::ExternalLinkage, "noop", *mod
   );
 }
 
@@ -91,7 +92,7 @@ llvm::Function *State::initNewAppFun() {
     false
   );
   return llvm::Function::Create(
-    funType, llvm::Function::ExternalLinkage, "newApp", mod
+    funType, llvm::Function::ExternalLinkage, "newApp", *mod
   );
 }
 
@@ -104,7 +105,7 @@ llvm::Function *State::initNewPartialFun() {
     false
   );
   return llvm::Function::Create(
-    funType, llvm::Function::ExternalLinkage, "newPartial", mod
+    funType, llvm::Function::ExternalLinkage, "newPartial", *mod
   );
 }
 
@@ -117,7 +118,7 @@ llvm::Function *State::initAppPartialFun() {
     false
   );
   return llvm::Function::Create(
-    funType, llvm::Function::ExternalLinkage, "appPartial", mod
+    funType, llvm::Function::ExternalLinkage, "appPartial", *mod
   );
 }
 
@@ -128,7 +129,7 @@ llvm::Function *State::initCopyFun() {
     false
   );
   return llvm::Function::Create(
-    funType, llvm::Function::ExternalLinkage, "copy", mod
+    funType, llvm::Function::ExternalLinkage, "copy", *mod
   );
 }
 
@@ -137,7 +138,7 @@ llvm::Function *State::initFreeFun() {
     llvm::Type::getVoidTy(context), {llvm::PointerType::get(context, 0)}, false
   );
   return llvm::Function::Create(
-    funType, llvm::Function::ExternalLinkage, "free", mod
+    funType, llvm::Function::ExternalLinkage, "free", *mod
   );
 }
 
@@ -146,7 +147,7 @@ llvm::Function *State::initFreeTermFun() {
     llvm::Type::getVoidTy(context), {llvm::PointerType::get(context, 0)}, false
   );
   return llvm::Function::Create(
-    funType, llvm::Function::ExternalLinkage, "freeTerm", mod
+    funType, llvm::Function::ExternalLinkage, "freeTerm", *mod
   );
 }
 
@@ -160,23 +161,23 @@ void State::linkRuntime() {
     return;
   }
 
-  bool failed = llvm::Linker::linkModules(mod, std::move(runtime));
+  bool failed = llvm::Linker::linkModules(*mod, std::move(runtime));
   if (failed) {
     error = RuntimeLinkFailed;
     return;
   }
 
-  mod.getFunction("noop")->setLinkage(llvm::Function::PrivateLinkage);
-  mod.getFunction("newApp")->setLinkage(llvm::Function::PrivateLinkage);
-  mod.getFunction("newPartial")->setLinkage(llvm::Function::PrivateLinkage);
-  mod.getFunction("appPartial")->setLinkage(llvm::Function::PrivateLinkage);
-  mod.getFunction("copy")->setLinkage(llvm::Function::PrivateLinkage);
-  mod.getFunction("freeTerm")->setLinkage(llvm::Function::PrivateLinkage);
+  mod->getFunction("noop")->setLinkage(llvm::Function::PrivateLinkage);
+  mod->getFunction("newApp")->setLinkage(llvm::Function::PrivateLinkage);
+  mod->getFunction("newPartial")->setLinkage(llvm::Function::PrivateLinkage);
+  mod->getFunction("appPartial")->setLinkage(llvm::Function::PrivateLinkage);
+  mod->getFunction("copy")->setLinkage(llvm::Function::PrivateLinkage);
+  mod->getFunction("freeTerm")->setLinkage(llvm::Function::PrivateLinkage);
 }
 
 void State::validate() {
   llvm::raw_string_ostream verifyOS(message);
-  if (verifyModule(mod, &verifyOS)) {
+  if (verifyModule(*mod, &verifyOS)) {
     error = InvalidModule;
     return;
   }
@@ -195,7 +196,7 @@ void State::optimize() {
   pb.crossRegisterProxies(lam, fam, cgam, mam);
   llvm::ModulePassManager mpm =
     pb.buildPerModuleDefaultPipeline(llvm::OptimizationLevel::O2);
-  mpm.run(mod, mam);
+  mpm.run(*mod, mam);
 }
 
 void State::writeObjectFile() {
@@ -215,7 +216,7 @@ void State::writeObjectFile() {
     error = UnableToEmitObjectFile;
     return;
   }
-  pass.run(mod);
+  pass.run(*mod);
   objectFile.close();
 }
 
@@ -231,7 +232,24 @@ void State::linkObjectFile() {
   }
 }
 
-void State::print() { mod.print(llvm::outs(), nullptr); }
+int32_t State::jit() {
+  llvm::ExitOnError exitOnError;
+
+  std::unique_ptr<llvm::orc::LLJIT> jit =
+    exitOnError(llvm::orc::LLJITBuilder().create());
+
+  exitOnError(jit->addIRModule(llvm::orc::ThreadSafeModule(
+    std::move(mod), std::make_unique<llvm::LLVMContext>()
+  )));
+
+  llvm::orc::ExecutorAddr mainAddr = exitOnError(jit->lookup("main"));
+  using MainType = int32_t (*)();
+  MainType mainFun = mainAddr.toPtr<MainType>();
+  int32_t result = mainFun();
+  return result;
+}
+
+void State::print() { mod->print(llvm::outs(), nullptr); }
 
 void State::printError() {
   static const char *info[] = {

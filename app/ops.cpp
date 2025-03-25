@@ -5,8 +5,9 @@ void State::main() {
 
   llvm::FunctionType *funType =
     llvm::FunctionType::get(llvm::Type::getInt32Ty(context), {}, false);
-  fun =
-    llvm::Function::Create(funType, llvm::Function::ExternalLinkage, name, mod);
+  fun = llvm::Function::Create(
+    funType, llvm::Function::ExternalLinkage, name, *mod
+  );
 
   llvm::BasicBlock *block = llvm::BasicBlock::Create(context, "entry", fun);
   builder.emplace(block);
@@ -23,7 +24,7 @@ void State::function(int symbol, int arity) {
   auto funName = "fun" + std::to_string(symbol);
 
   fun = llvm::Function::Create(
-    funType, llvm::Function::PrivateLinkage, funName, mod
+    funType, llvm::Function::PrivateLinkage, funName, *mod
   );
 
   llvm::BasicBlock *block = llvm::BasicBlock::Create(context, "entry", fun);
@@ -200,7 +201,7 @@ void State::addGlobal(
   llvm::Constant *termInit = llvm::ConstantStruct::get(termType, fieldValues);
 
   auto *global = new llvm::GlobalVariable(
-    mod,                               // Module
+    *mod,                              // Module
     termType,                          // Type
     true,                              // isConstant
     llvm::GlobalValue::PrivateLinkage, // Linkage
