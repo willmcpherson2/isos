@@ -22,9 +22,7 @@ data Op
   | FreeArgs {var :: CInt}
   | FreeTerm {var :: CInt}
   | AppNew {name :: CInt, var :: CInt, args :: Vector CInt}
-  | AppFrom {name :: CInt, old :: CInt, var :: CInt, args :: Vector CInt}
   | PartialNew {name :: CInt, var :: CInt, args :: Vector CInt}
-  | PartialFrom {name :: CInt, old :: CInt, var :: CInt, args :: Vector CInt}
   | AppPartial {name :: CInt, var :: CInt, args :: Vector CInt}
   | Match {var :: CInt, arms :: [Arm]}
 

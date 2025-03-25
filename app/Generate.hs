@@ -73,11 +73,9 @@ genOp state = \case
   AppNew {name, var, args} -> do
     mArgs <- thaw args
     [C.exp| void { $(State *state)->appNew($(int name), $(int var), $vec-len:mArgs, $vec-ptr:(int *mArgs)) } |]
-  AppFrom {name, old, var, args} -> error "todo"
   PartialNew {name, var, args} -> do
     mArgs <- thaw args
     [C.exp| void { $(State *state)->partialNew($(int name), $(int var), $vec-len:mArgs, $vec-ptr:(int *mArgs)) } |]
-  PartialFrom {name, old, var, args} -> error "todo"
   AppPartial {name, var, args} -> do
     mArgs <- thaw args
     [C.exp| void { $(State *state)->appPartial($(int name), $(int var), $vec-len:mArgs, $vec-ptr:(int *mArgs)) } |]

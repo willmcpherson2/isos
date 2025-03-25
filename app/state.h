@@ -31,9 +31,7 @@ public:
   void freeArgs(int var);
   void freeTerm(int var);
   void appNew(int name, int var, int length, int *args);
-  void appFrom(int name, int old, int var, int length, int *args);
   void partialNew(int name, int var, int length, int *args);
-  void partialFrom(int name, int old, int var, int length, int *args);
   void appPartial(int name, int var, int length, int *args);
   void match(int var);
   void arm(int symbol);
