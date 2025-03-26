@@ -3,7 +3,7 @@ SRC = app
 TEST = test
 FLAGS = -g -fsanitize=address,undefined,leak
 LDFLAGS = -lLLVM-19
-SRCS = $(SRC)/test.cpp $(SRC)/state.cpp $(SRC)/ops.cpp
+SRCS = $(SRC)/rt.c $(SRC)/test.cpp $(SRC)/state.cpp $(SRC)/ops.cpp
 
 CC = clang
 RT = rt.bc

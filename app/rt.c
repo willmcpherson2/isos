@@ -1,30 +1,19 @@
-#include <stddef.h>
-#include <stdint.h>
+#include "rt.h"
+
 #include <stdlib.h>
 #include <string.h>
-
-typedef struct Term Term;
-
-struct Term {
-  void (*fun)(Term *);
-  Term *args;
-  uint32_t symbol;
-  uint16_t length;
-  uint16_t capacity;
-};
 
 void noop(Term *term) { return; }
 
 void newApp(Term *term, uint64_t length, Term *args) {
   uint64_t size = length * sizeof(Term);
-  term->args = malloc(size);
+  term->args = (Term *)malloc(size);
   memcpy(term->args, args, size);
 }
 
 void newPartial(Term *term, uint64_t length, Term *args) {
-  uint64_t size = length * sizeof(Term);
-  term->args = calloc(length, sizeof(Term));
-  memcpy(term->args, args, size);
+  term->args = (Term *)calloc(term->capacity, sizeof(Term));
+  memcpy(term->args, args, length * sizeof(Term));
 
   Term fun = *term;
   fun.length = 0;
@@ -59,7 +48,7 @@ void copy(Term *dest, Term *src) {
   }
 
   uint64_t size = src->capacity * sizeof(Term);
-  dest->args = malloc(size);
+  dest->args = (Term *)malloc(size);
 
   for (uint64_t arg = 0; arg < src->capacity; ++arg) {
     copy(&dest->args[arg], &src->args[arg]);

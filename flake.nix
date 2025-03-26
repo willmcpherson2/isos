@@ -18,6 +18,7 @@
         pkgs.llvmPackages_19.clang-tools
         pkgs.llvmPackages_19.clang
         pkgs.llvmPackages_19.llvm
+        pkgs.valgrind
       ];
       baseShellHook = ''
         export LD_LIBRARY_PATH=${pkgs.llvmPackages_19.llvm.lib}/lib:$LD_LIBRARY_PATH

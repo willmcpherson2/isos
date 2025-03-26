@@ -1,5 +1,7 @@
 #include "state.h"
 
+#include "rt.h"
+
 #define CHECK(state)                                                           \
   if (!state.ok()) {                                                           \
     state.printError();                                                        \
@@ -150,23 +152,103 @@ void testAppPartial() {
   // f = id
   // x = f True
   state.main();
-  state.loadData(1, 1);
-  state.newPartial(2, 1, 0, nullptr);
-  int args[] = {1};
-  state.appPartial(3, 2, 1, args);
-  state.call(4, 3);
-  state.returnSymbol(4);
+  state.loadData(1, 2);
+  state.loadData(2, 1);
+  state.newPartial(3, 1, 0, nullptr);
+  int args[] = {2};
+  state.appPartial(4, 3, 1, args);
+  state.call(5, 4);
+  state.returnSymbol(5);
 
   assert(run(state) == 1);
 }
 
-int main() {
+void testNewApp() {
+  Term foo{
+    .fun = noop,
+    .args = nullptr,
+    .symbol = 42,
+    .length = 0,
+    .capacity = 0,
+  };
+
+  Term id{
+    .fun =
+      [](Term *self) {
+        Term x = self->args[0];
+        free(self->args);
+        x.fun(&x);
+        *self = x;
+      },
+    .args = nullptr,
+    .symbol = 2,
+    .length = 1,
+    .capacity = 1,
+  };
+
+  Term args[] = {foo};
+  newApp(&id, 1, args);
+
+  id.fun(&id);
+
+  freeTerm(&id);
+
+  assert(id.symbol == 42);
+}
+
+void testNewPartial() {
+  Term foo{
+    .fun = noop,
+    .args = nullptr,
+    .symbol = 42,
+    .length = 0,
+    .capacity = 0,
+  };
+
+  Term id{
+    .fun =
+      [](Term *self) {
+        Term x = self->args[0];
+        free(self->args);
+        x.fun(&x);
+        *self = x;
+      },
+    .args = nullptr,
+    .symbol = 2,
+    .length = 1,
+    .capacity = 1,
+  };
+
+  Term args1[] = {};
+  newPartial(&id, 0, args1);
+
+  Term args2[] = {foo};
+  appPartial(&id, 1, args2);
+
+  id.fun(&id);
+
+  freeTerm(&id);
+
+  assert(id.symbol == 42);
+}
+
+void testRuntime() {
+  testNewApp();
+  testNewPartial();
+}
+
+void testCompiler() {
   testReturnSymbol();
   testCopy();
   testIdentity();
   testMatch();
   testNot();
   testAppPartial();
+}
+
+int main() {
+  testRuntime();
+  testCompiler();
 
   return 0;
 }
