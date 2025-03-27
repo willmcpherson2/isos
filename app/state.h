@@ -18,9 +18,15 @@
 
 #include <sstream>
 
+using Symbol = uint32_t;
+
+using Arity = uint16_t;
+
+using Index = uint64_t;
+
 template <typename Key> class State {
 public:
-  enum Error {
+  enum Error : uint8_t {
     None,
     NoTargetTriple,
     InvalidModule,
@@ -60,11 +66,11 @@ public:
     locals.clear();
   }
 
-  void data(Key name, int symbol, int arity) {
+  void data(Key name, Symbol symbol, Arity arity) {
     addGlobal(noopFun, name, symbol, arity);
   }
 
-  void function(Key name, Key argName, int symbol, int arity) {
+  void function(Key name, Key argName, Symbol symbol, Arity arity) {
     fun =
       llvm::Function::Create(funType, llvm::Function::PrivateLinkage, "", *mod);
 
@@ -91,13 +97,13 @@ public:
     locals.insert({name, termAlloca});
   }
 
-  void loadArg(Key name, Key var, int i) {
+  void loadArg(Key name, Key var, Index i) {
     llvm::AllocaInst *term = locals[var];
 
     llvm::LoadInst *termLoad = builder->CreateLoad(termType, term);
     llvm::Value *argsField = builder->CreateExtractValue(termLoad, 1);
     llvm::ConstantInt *argIndex =
-      llvm::ConstantInt::get(llvm::Type::getInt32Ty(context), i);
+      llvm::ConstantInt::get(llvm::Type::getInt64Ty(context), i);
     llvm::Value *argPtr = builder->CreateGEP(termType, argsField, argIndex);
     llvm::LoadInst *arg = builder->CreateLoad(termType, argPtr);
     llvm::AllocaInst *argAlloca = builder->CreateAlloca(termType, nullptr);
@@ -106,15 +112,15 @@ public:
     locals.insert({name, argAlloca});
   }
 
-  void newApp(Key name, Key var, int length, Key *args) {
+  void newApp(Key name, Key var, Arity length, Key *args) {
     callApp(newAppFun, name, var, length, args);
   }
 
-  void newPartial(Key name, Key var, int length, Key *args) {
+  void newPartial(Key name, Key var, Arity length, Key *args) {
     callApp(newPartialFun, name, var, length, args);
   }
 
-  void appPartial(Key name, Key var, int length, Key *args) {
+  void appPartial(Key name, Key var, Arity length, Key *args) {
     callApp(appPartialFun, name, var, length, args);
   }
 
@@ -176,7 +182,7 @@ public:
     builder->CreateUnreachable();
   }
 
-  void arm(int symbol) {
+  void arm(Symbol symbol) {
     llvm::ConstantInt *symbolConstant =
       llvm::ConstantInt::get(llvm::Type::getInt32Ty(context), symbol);
     llvm::BasicBlock *armBlock = llvm::BasicBlock::Create(context, "", fun);
@@ -254,7 +260,7 @@ public:
   }
 
   void linkObjectFile() {
-    int compilerExitCode = std::system("cc -o main main.o");
+    auto compilerExitCode = WEXITSTATUS(std::system("cc -o main main.o"));
     if (compilerExitCode != 0) {
       std::stringstream stream;
       stream << "process exited with code ";
@@ -454,7 +460,8 @@ private:
     );
   }
 
-  void callApp(llvm::Function *fun, Key name, Key var, int length, Key *args) {
+  void
+  callApp(llvm::Function *fun, Key name, Key var, Arity length, Key *args) {
     llvm::AllocaInst *term = locals[var];
 
     llvm::LoadInst *termLoad = builder->CreateLoad(termType, term);
@@ -466,15 +473,15 @@ private:
 
     llvm::ArrayType *argsType = llvm::ArrayType::get(termType, length);
     llvm::AllocaInst *argsAlloca = builder->CreateAlloca(argsType, nullptr);
-    for (int i = 0; i < length; ++i) {
+    for (Index i = 0; i < length; ++i) {
       Key arg = args[i];
       llvm::AllocaInst *argLocal = locals[arg];
       llvm::LoadInst *argLoad = builder->CreateLoad(termType, argLocal);
       llvm::Value *argGep = builder->CreateGEP(
         argsType,
         argsAlloca,
-        {llvm::ConstantInt::get(llvm::Type::getInt32Ty(context), 0),
-         llvm::ConstantInt::get(llvm::Type::getInt32Ty(context), i)}
+        {llvm::ConstantInt::get(llvm::Type::getInt64Ty(context), 0),
+         llvm::ConstantInt::get(llvm::Type::getInt64Ty(context), i)}
       );
       builder->CreateStore(argLoad, argGep);
     }
@@ -488,7 +495,7 @@ private:
     locals.insert({name, termAlloca});
   }
 
-  void addGlobal(llvm::Function *fun, Key name, int symbol, int arity) {
+  void addGlobal(llvm::Function *fun, Key name, Symbol symbol, Arity arity) {
     std::vector<llvm::Constant *> fieldValues = {
       fun, // fun
       llvm::ConstantPointerNull::get(llvm::PointerType::get(context, 0)
@@ -516,4 +523,4 @@ private:
   }
 };
 
-using StateInt = State<int>;
+using StateInt = State<uint64_t>;
