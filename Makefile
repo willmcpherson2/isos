@@ -3,12 +3,12 @@ SRC = app
 TEST = test
 FLAGS = -g -fsanitize=address,undefined,leak
 LDFLAGS = -lLLVM-19
-SRCS = $(SRC)/rt.h $(SRC)/rt.c $(SRC)/test.cpp $(SRC)/state.h
+SRCS = $(SRC)/rt.c $(SRC)/test.cpp
 
 CC = clang
 RT = rt.bc
 RT_FLAGS = -emit-llvm -O2
-RT_SRCS = $(SRC)/rt.h $(SRC)/rt.c
+RT_SRCS = $(SRC)/rt.c
 
 OUTPUT = main
 
