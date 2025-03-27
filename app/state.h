@@ -48,12 +48,10 @@ public:
       freeTermFun(initFreeTermFun()) {}
 
   void main() {
-    auto name = "main";
-
     llvm::FunctionType *funType =
       llvm::FunctionType::get(llvm::Type::getInt32Ty(context), {}, false);
     fun = llvm::Function::Create(
-      funType, llvm::Function::ExternalLinkage, name, *mod
+      funType, llvm::Function::ExternalLinkage, "main", *mod
     );
 
     llvm::BasicBlock *block = llvm::BasicBlock::Create(context, "entry", fun);
