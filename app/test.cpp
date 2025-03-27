@@ -8,7 +8,9 @@
     assert(false);                                                             \
   }
 
-int32_t run(State &state) {
+using Key = const char *;
+
+int32_t run(State<Key> &state) {
   state.linkRuntime();
   CHECK(state);
 
@@ -21,144 +23,144 @@ int32_t run(State &state) {
 }
 
 void testReturnSymbol() {
-  State state{};
+  State<Key> state{};
   CHECK(state);
 
   // True
-  state.data(1, 0);
+  state.data("True", 1, 0);
 
   // main = True
   state.main();
-  state.loadData(1, 1);
-  state.returnSymbol(1);
+  state.loadData("true", "True");
+  state.returnSymbol("true");
 
   assert(run(state) == 1);
 }
 
 void testCopy() {
-  State state{};
+  State<Key> state{};
   CHECK(state);
 
   // True
-  state.data(1, 0);
+  state.data("True", 1, 0);
 
   // main = True
   state.main();
-  state.loadData(1, 1);
-  state.copy(2, 1);
-  state.freeTerm(2);
-  state.returnSymbol(2);
+  state.loadData("True", "True");
+  state.copy("x", "True");
+  state.freeTerm("x");
+  state.returnSymbol("x");
 
   assert(run(state) == 1);
 }
 
 void testIdentity() {
-  State state{};
+  State<Key> state{};
   CHECK(state);
 
   // True
-  state.data(1, 0);
+  state.data("True", 1, 0);
   // False
-  state.data(2, 0);
+  state.data("False", 2, 0);
 
   // id x = x
-  state.function(3, 1);
-  state.loadArg(1, 0, 0);
-  state.freeArgs(0);
-  state.call(2, 1);
-  state.returnTerm(2);
+  state.function("id", "self", 1, 1);
+  state.loadArg("x", "self", 0);
+  state.freeArgs("self");
+  state.call("result", "x");
+  state.returnTerm("result");
 
   // main = id True
   state.main();
-  state.loadData(1, 3);
-  state.loadData(2, 1);
-  int args[] = {2};
-  state.newApp(3, 1, 1, args);
-  state.call(4, 3);
-  state.returnSymbol(4);
+  state.loadData("id", "id");
+  state.loadData("True", "True");
+  Key args[] = {"True"};
+  state.newApp("x", "id", 1, args);
+  state.call("result", "x");
+  state.returnSymbol("result");
 
   assert(run(state) == 1);
 }
 
 void testMatch() {
-  State state{};
+  State<Key> state{};
   CHECK(state);
 
   // True
-  state.data(1, 0);
+  state.data("True", 1, 0);
   // False
-  state.data(2, 0);
+  state.data("False", 2, 0);
 
   state.main();
-  state.loadData(1, 1);
-  state.loadData(2, 2);
-  state.match(1);
+  state.loadData("True", "True");
+  state.loadData("False", "False");
+  state.match("True");
   state.arm(1);
-  state.returnSymbol(1);
+  state.returnSymbol("False");
   state.arm(2);
-  state.returnSymbol(2);
+  state.returnSymbol("True");
 
-  assert(run(state) == 1);
+  assert(run(state) == 2);
 }
 
 void testNot() {
-  State state{};
+  State<Key> state{};
   CHECK(state);
 
   // True
-  state.data(1, 0);
+  state.data("True", 1, 0);
   // False
-  state.data(2, 0);
+  state.data("False", 2, 0);
 
   // not True = False
   // not False = True
-  state.function(3, 1);
-  state.loadArg(1, 0, 0);
-  state.freeArgs(0);
-  state.match(1);
+  state.function("not", "self", 3, 1);
+  state.loadArg("x", "self", 0);
+  state.freeArgs("self");
+  state.match("x");
   state.arm(1);
-  state.loadData(2, 2);
-  state.returnTerm(2);
+  state.loadData("False", "False");
+  state.returnTerm("False");
   state.arm(2);
-  state.loadData(3, 1);
-  state.returnTerm(3);
+  state.loadData("True", "True");
+  state.returnTerm("True");
 
   // main = not True
   state.main();
-  state.loadData(1, 3);
-  state.loadData(2, 1);
-  int args[] = {2};
-  state.newApp(3, 1, 1, args);
-  state.call(4, 3);
-  state.returnSymbol(4);
+  state.loadData("not", "not");
+  state.loadData("True", "True");
+  Key args[] = {"True"};
+  state.newApp("x", "not", 1, args);
+  state.call("result", "x");
+  state.returnSymbol("result");
 
   assert(run(state) == 2);
 }
 
 void testAppPartial() {
-  State state{};
+  State<Key> state{};
   CHECK(state);
 
   // True
-  state.data(1, 0);
+  state.data("True", 1, 0);
 
   // id x = x
-  state.function(2, 1);
-  state.loadArg(1, 0, 0);
-  state.freeArgs(0);
-  state.call(2, 1);
-  state.returnTerm(2);
+  state.function("id", "self", 1, 1);
+  state.loadArg("x", "self", 0);
+  state.freeArgs("self");
+  state.call("result", "x");
+  state.returnTerm("result");
 
   // f = id
   // x = f True
   state.main();
-  state.loadData(1, 2);
-  state.loadData(2, 1);
-  state.newPartial(3, 1, 0, nullptr);
-  int args[] = {2};
-  state.appPartial(4, 3, 1, args);
-  state.call(5, 4);
-  state.returnSymbol(5);
+  state.loadData("True", "True");
+  state.loadData("id", "id");
+  state.newPartial("f", "id", 0, nullptr);
+  Key args[] = {"True"};
+  state.appPartial("x", "f", 1, args);
+  state.call("result", "x");
+  state.returnSymbol("result");
 
   assert(run(state) == 1);
 }

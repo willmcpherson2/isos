@@ -35,8 +35,4 @@ executable isos
     , inline-c-cpp  ^>=0.5.0.2
     , vector        ^>=0.13.1.0
 
-  c-sources:
-    app/ops.cpp
-    app/state.cpp
-
   extra-libraries: LLVM-19

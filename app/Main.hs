@@ -8,12 +8,14 @@ main = do
   let idTrueProg =
         Prog
           [ -- True
-            Data 1 0,
+            Data 1 1 0,
             -- False
-            Data 2 0
+            Data 2 2 0
           ]
           [ -- id x = x
             Fun
+              3
+              0
               3
               1
               [ LoadArg 1 0 0,

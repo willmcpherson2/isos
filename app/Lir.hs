@@ -6,9 +6,9 @@ import Language.C.Inline.Cpp (CInt)
 
 data Prog = Prog {datas :: [Data], funs :: [Fun], entry :: Block}
 
-data Data = Data {symbol :: CInt, arity :: CInt}
+data Data = Data {name :: CInt, symbol :: CInt, arity :: CInt}
 
-data Fun = Fun {symbol :: CInt, arity :: CInt, block :: Block}
+data Fun = Fun {name :: CInt, argName :: CInt, symbol :: CInt, arity :: CInt, block :: Block}
 
 type Block = [Op]
 
