@@ -2,7 +2,7 @@
 all: test
 
 rt.bc: app/rt.c app/rt.h
-	clang -c -g -emit-llvm -o rt.bc app/rt.c
+	clang -c -O2 -emit-llvm -o rt.bc app/rt.c
 
 test: rt.bc app/test.cpp app/state.h app/rt.c app/rt.h
 	c++ -g -fsanitize=address,undefined,leak -o test app/rt.c app/test.cpp -lLLVM-19
