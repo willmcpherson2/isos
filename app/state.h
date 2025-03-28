@@ -216,7 +216,7 @@ public:
 
   void validate() {
     llvm::raw_string_ostream verifyOS(message);
-    if (verifyModule(*mod, &verifyOS)) {
+    if (llvm::verifyModule(*mod, &verifyOS)) {
       error = InvalidModule;
       return;
     }
