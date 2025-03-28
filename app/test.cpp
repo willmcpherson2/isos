@@ -1,11 +1,22 @@
+#include "rt.h"
 #include "state.h"
 
-#include "rt.h"
+#include <cstdint>
+#include <iostream>
 
 #define CHECK(state)                                                           \
   if (!state.ok()) {                                                           \
+    std::cerr << "state invalid: " << __func__ << " ❌\n";                     \
+    std::cerr << "at " << __FILE__ << ":" << __LINE__ << "\n";                 \
     state.printError();                                                        \
-    assert(false);                                                             \
+    std::cerr << "\n";                                                         \
+  }
+
+#define TEST(actual, expected)                                                 \
+  if (actual != expected) {                                                    \
+    std::cerr << "test failed: " << __func__ << " ❌\n";                       \
+    std::cerr << "at " << __FILE__ << ":" << __LINE__ << "\n";                 \
+    std::cerr << "actual: " << actual << ", expected: " << expected << "\n\n"; \
   }
 
 using Key = const char *;
@@ -34,7 +45,7 @@ void testReturnSymbol() {
   state.loadData("true", "True");
   state.returnSymbol("true");
 
-  assert(run(state) == 1);
+  TEST(run(state), 1);
 }
 
 void testCopy() {
@@ -51,7 +62,7 @@ void testCopy() {
   state.freeTerm("x");
   state.returnSymbol("x");
 
-  assert(run(state) == 1);
+  TEST(run(state), 1);
 }
 
 void testIdentity() {
@@ -79,7 +90,7 @@ void testIdentity() {
   state.call("result", "x");
   state.returnSymbol("result");
 
-  assert(run(state) == 1);
+  TEST(run(state), 1);
 }
 
 void testMatch() {
@@ -100,7 +111,7 @@ void testMatch() {
   state.arm(2);
   state.returnSymbol("True");
 
-  assert(run(state) == 2);
+  TEST(run(state), 2);
 }
 
 void testNot() {
@@ -134,7 +145,7 @@ void testNot() {
   state.call("result", "x");
   state.returnSymbol("result");
 
-  assert(run(state) == 2);
+  TEST(run(state), 2);
 }
 
 void testAppPartial() {
@@ -162,7 +173,50 @@ void testAppPartial() {
   state.call("result", "x");
   state.returnSymbol("result");
 
-  assert(run(state) == 1);
+  TEST(run(state), 1);
+}
+
+void testAdd() {
+  State<Key> state{};
+  CHECK(state);
+
+  // Zero
+  state.data("Zero", 0, 0);
+
+  // Succ n
+  state.data("Succ", 1, 1);
+
+  // add Zero m = m
+  // add (Succ n) m = Succ (add n m)
+  state.function("add", "self", 2, 2);
+  state.loadArg("succN", "self", 0);
+  state.loadArg("m", "self", 1);
+  state.freeArgs("self");
+  state.match("succN");
+  state.arm(0);
+  state.call("evalM", "m");
+  state.returnTerm("evalM");
+  state.arm(1);
+  state.loadArg("n", "succN", 0);
+  state.loadData("Succ", "Succ");
+  state.loadData("add", "add");
+  Key addArgs[] = {"n", "m"};
+  state.newApp("added", "add", 2, addArgs);
+  Key succArgs[] = {"added"};
+  state.newApp("succed", "Succ", 1, succArgs);
+  state.returnTerm("succed");
+
+  // main = add Zero Zero
+  state.main();
+  state.loadData("add", "add");
+  state.loadData("n", "Zero");
+  state.loadData("m", "Zero");
+  Key mainAddArgs[] = {"n", "m"};
+  state.newApp("added", "add", 2, mainAddArgs);
+  state.call("evalAdded", "added");
+  state.returnSymbol("evalAdded");
+
+  TEST(run(state), 0);
 }
 
 void testNewApp() {
@@ -195,7 +249,7 @@ void testNewApp() {
 
   freeTerm(&id);
 
-  assert(id.symbol == 42);
+  TEST(id.symbol, 42);
 }
 
 void testNewPartial() {
@@ -231,7 +285,7 @@ void testNewPartial() {
 
   freeTerm(&id);
 
-  assert(id.symbol == 42);
+  TEST(id.symbol, 42);
 }
 
 void testRuntime() {
@@ -246,6 +300,7 @@ void testCompiler() {
   testMatch();
   testNot();
   testAppPartial();
+  testAdd();
 }
 
 int main() {
