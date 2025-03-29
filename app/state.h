@@ -72,8 +72,9 @@ public:
   }
 
   void function(Key name, Key argName, Symbol symbol, Arity arity) {
-    fun =
-      llvm::Function::Create(funType, llvm::Function::PrivateLinkage, "", *mod);
+    fun = llvm::Function::Create(
+      funType, llvm::Function::InternalLinkage, "", *mod
+    );
 
     llvm::BasicBlock *block = llvm::BasicBlock::Create(context, "entry", fun);
     builder.emplace(block);
@@ -207,12 +208,12 @@ public:
       return;
     }
 
-    mod->getFunction("noop")->setLinkage(llvm::Function::PrivateLinkage);
-    mod->getFunction("newApp")->setLinkage(llvm::Function::PrivateLinkage);
-    mod->getFunction("newPartial")->setLinkage(llvm::Function::PrivateLinkage);
-    mod->getFunction("appPartial")->setLinkage(llvm::Function::PrivateLinkage);
-    mod->getFunction("copy")->setLinkage(llvm::Function::PrivateLinkage);
-    mod->getFunction("freeTerm")->setLinkage(llvm::Function::PrivateLinkage);
+    mod->getFunction("noop")->setLinkage(llvm::Function::InternalLinkage);
+    mod->getFunction("newApp")->setLinkage(llvm::Function::InternalLinkage);
+    mod->getFunction("newPartial")->setLinkage(llvm::Function::InternalLinkage);
+    mod->getFunction("appPartial")->setLinkage(llvm::Function::InternalLinkage);
+    mod->getFunction("copy")->setLinkage(llvm::Function::InternalLinkage);
+    mod->getFunction("freeTerm")->setLinkage(llvm::Function::InternalLinkage);
   }
 
   void validate() {
@@ -504,16 +505,16 @@ private:
     llvm::Constant *termInit = llvm::ConstantStruct::get(termType, fieldValues);
 
     auto *global = new llvm::GlobalVariable(
-      *mod,                              // Module
-      termType,                          // Type
-      true,                              // isConstant
-      llvm::GlobalValue::PrivateLinkage, // Linkage
-      termInit,                          // Initializer
-      "",                                // Name
-      nullptr,                           // InsertBefore
-      llvm::GlobalValue::NotThreadLocal, // ThreadLocalMode
-      0,                                 // AddressSpace
-      false                              // isExternallyInitialized
+      *mod,                               // Module
+      termType,                           // Type
+      true,                               // isConstant
+      llvm::GlobalValue::InternalLinkage, // Linkage
+      termInit,                           // Initializer
+      "",                                 // Name
+      nullptr,                            // InsertBefore
+      llvm::GlobalValue::NotThreadLocal,  // ThreadLocalMode
+      0,                                  // AddressSpace
+      false                               // isExternallyInitialized
     );
 
     globals[name] = global;
