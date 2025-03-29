@@ -186,15 +186,17 @@ void testAdd() {
   // add Zero m = m
   // add (Succ n) m = Succ (add n m)
   state.function("add", "self", 2, 2);
-  state.loadArg("n", "self", 0);
+  state.loadArg("succ", "self", 0);
   state.loadArg("m", "self", 1);
   state.freeArgs("self");
-  state.match("n");
+  state.call("succ", "succ");
+  state.match("succ");
   state.arm(0);
   state.call("m", "m");
   state.returnTerm("m");
   state.arm(1);
-  state.loadArg("n", "n", 0);
+  state.loadArg("n", "succ", 0);
+  state.freeArgs("succ");
   state.loadData("Succ", "Succ");
   state.loadData("add", "add");
   state.newApp("added", "add", "n", "m");
@@ -204,13 +206,18 @@ void testAdd() {
   // main = add Zero Zero
   state.main();
   state.loadData("add", "add");
-  state.loadData("n", "Zero");
-  state.loadData("m", "Zero");
+  state.loadData("Succ", "Succ");
+  state.loadData("Zero", "Zero");
+  state.newApp("n", "Succ", "Zero");
+  state.loadData("Succ", "Succ");
+  state.loadData("Zero", "Zero");
+  state.newApp("m", "Succ", "Zero");
   state.newApp("added", "add", "n", "m");
   state.call("added", "added");
+  state.freeTerm("added");
   state.returnSymbol("added");
 
-  TEST(run(state), 0);
+  TEST(run(state), 1);
 }
 
 void testNewApp() {

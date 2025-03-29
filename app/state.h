@@ -50,7 +50,7 @@ public:
       newPartialFun(initNewPartialFun()),
       appPartialFun(initAppPartialFun()),
       copyFun(initCopyFun()),
-      freeFun(initFreeFun()),
+      freeArgsFun(initFreeArgsFun()),
       freeTermFun(initFreeTermFun()) {}
 
   void main() {
@@ -151,10 +151,7 @@ public:
 
   void freeArgs(Key var) {
     llvm::Value *term = lookup(var);
-
-    llvm::LoadInst *termLoad = builder->CreateLoad(termType, term);
-    llvm::Value *argsField = builder->CreateExtractValue(termLoad, 1);
-    builder->CreateCall(freeFun, {argsField});
+    builder->CreateCall(freeArgsFun, {term});
   }
 
   void freeTerm(Key var) {
@@ -231,6 +228,7 @@ public:
     mod->getFunction("newPartial")->setLinkage(llvm::Function::InternalLinkage);
     mod->getFunction("appPartial")->setLinkage(llvm::Function::InternalLinkage);
     mod->getFunction("copy")->setLinkage(llvm::Function::InternalLinkage);
+    mod->getFunction("freeArgs")->setLinkage(llvm::Function::InternalLinkage);
     mod->getFunction("freeTerm")->setLinkage(llvm::Function::InternalLinkage);
   }
 
@@ -339,7 +337,7 @@ private:
   llvm::Function *newPartialFun = nullptr;
   llvm::Function *appPartialFun = nullptr;
   llvm::Function *copyFun = nullptr;
-  llvm::Function *freeFun = nullptr;
+  llvm::Function *freeArgsFun = nullptr;
   llvm::Function *freeTermFun = nullptr;
 
   std::unordered_map<Key, llvm::GlobalVariable *> globals;
@@ -458,14 +456,14 @@ private:
     );
   }
 
-  llvm::Function *initFreeFun() {
+  llvm::Function *initFreeArgsFun() {
     llvm::FunctionType *funType = llvm::FunctionType::get(
       llvm::Type::getVoidTy(context),
       {llvm::PointerType::get(context, 0)},
       false
     );
     return llvm::Function::Create(
-      funType, llvm::Function::ExternalLinkage, "free", *mod
+      funType, llvm::Function::ExternalLinkage, "freeArgs", *mod
     );
   }
 

@@ -55,6 +55,8 @@ void copy(Term *dest, Term *src) {
   }
 }
 
+void freeArgs(Term *term) { free(term->args); }
+
 void freeTerm(Term *term) {
   for (uint64_t arg = 0; arg < term->length; ++arg) {
     freeTerm(&term->args[arg]);

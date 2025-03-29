@@ -15,4 +15,5 @@ void newApp(Term *term, uint64_t length, Term *args);
 void newPartial(Term *term, uint64_t length, Term *args);
 void appPartial(Term *term, uint64_t length, Term *args);
 void copy(Term *dest, Term *src);
+void freeArgs(Term *term);
 void freeTerm(Term *term);
