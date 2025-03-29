@@ -85,7 +85,7 @@ void testIdentity() {
   state.main();
   state.loadData("id", "id");
   state.loadData("True", "True");
-  state.newApp("result", "id", "True");
+  state.newAppArgs("result", "id", "True");
   state.call("result", "result");
   state.returnSymbol("result");
 
@@ -139,7 +139,7 @@ void testNot() {
   state.main();
   state.loadData("not", "not");
   state.loadData("True", "True");
-  state.newApp("result", "not", "True");
+  state.newAppArgs("result", "not", "True");
   state.call("result", "result");
   state.returnSymbol("result");
 
@@ -165,8 +165,8 @@ void testAppPartial() {
   state.main();
   state.loadData("True", "True");
   state.loadData("id", "id");
-  state.newPartial("f", "id");
-  state.appPartial("x", "f", "True");
+  state.newPartialArgs("f", "id");
+  state.appPartialArgs("x", "f", "True");
   state.call("x", "x");
   state.returnSymbol("x");
 
@@ -199,8 +199,8 @@ void testAdd() {
   state.freeArgs("succ");
   state.loadData("Succ", "Succ");
   state.loadData("add", "add");
-  state.newApp("added", "add", "n", "m");
-  state.newApp("succed", "Succ", "added");
+  state.newAppArgs("added", "add", "n", "m");
+  state.newAppArgs("succed", "Succ", "added");
   state.returnTerm("succed");
 
   // main = add Zero Zero
@@ -208,11 +208,11 @@ void testAdd() {
   state.loadData("add", "add");
   state.loadData("Succ", "Succ");
   state.loadData("Zero", "Zero");
-  state.newApp("n", "Succ", "Zero");
+  state.newAppArgs("n", "Succ", "Zero");
   state.loadData("Succ", "Succ");
   state.loadData("Zero", "Zero");
-  state.newApp("m", "Succ", "Zero");
-  state.newApp("added", "add", "n", "m");
+  state.newAppArgs("m", "Succ", "Zero");
+  state.newAppArgs("added", "add", "n", "m");
   state.call("added", "added");
   state.freeTerm("added");
   state.returnSymbol("added");
@@ -260,8 +260,8 @@ void testMapMaybe() {
   state.loadData("Just", "Just");
   state.loadArg("x", "just", 0);
   state.freeArgs("just");
-  state.appPartial("result", "f", "x");
-  state.newApp("result", "Just", "result");
+  state.appPartialArgs("result", "f", "x");
+  state.newAppArgs("result", "Just", "result");
   state.returnTerm("result");
   state.arm(3);
   state.loadData("Nothing", "Nothing");
@@ -273,9 +273,9 @@ void testMapMaybe() {
   state.loadData("not", "not");
   state.loadData("Just", "Just");
   state.loadData("True", "True");
-  state.newPartial("not", "not");
-  state.newApp("result", "Just", "True");
-  state.newApp("result", "map", "not", "result");
+  state.newPartialArgs("not", "not");
+  state.newAppArgs("result", "Just", "True");
+  state.newAppArgs("result", "map", "not", "result");
   state.call("result", "result");
   state.freeTerm("result");
   state.returnSymbol("result");
