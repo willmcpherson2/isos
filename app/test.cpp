@@ -85,8 +85,7 @@ void testIdentity() {
   state.main();
   state.loadData("id", "id");
   state.loadData("True", "True");
-  Key args[] = {"True"};
-  state.newApp("result", "id", 1, args);
+  state.newApp("result", "id", "True");
   state.call("result", "result");
   state.returnSymbol("result");
 
@@ -140,8 +139,7 @@ void testNot() {
   state.main();
   state.loadData("not", "not");
   state.loadData("True", "True");
-  Key args[] = {"True"};
-  state.newApp("result", "not", 1, args);
+  state.newApp("result", "not", "True");
   state.call("result", "result");
   state.returnSymbol("result");
 
@@ -167,9 +165,8 @@ void testAppPartial() {
   state.main();
   state.loadData("True", "True");
   state.loadData("id", "id");
-  state.newPartial("f", "id", 0, nullptr);
-  Key args[] = {"True"};
-  state.appPartial("x", "f", 1, args);
+  state.newPartial("f", "id");
+  state.appPartial("x", "f", "True");
   state.call("x", "x");
   state.returnSymbol("x");
 
@@ -200,10 +197,8 @@ void testAdd() {
   state.loadArg("n", "n", 0);
   state.loadData("Succ", "Succ");
   state.loadData("add", "add");
-  Key addArgs[] = {"n", "m"};
-  state.newApp("added", "add", 2, addArgs);
-  Key succArgs[] = {"added"};
-  state.newApp("succed", "Succ", 1, succArgs);
+  state.newApp("added", "add", "n", "m");
+  state.newApp("succed", "Succ", "added");
   state.returnTerm("succed");
 
   // main = add Zero Zero
@@ -211,8 +206,7 @@ void testAdd() {
   state.loadData("add", "add");
   state.loadData("n", "Zero");
   state.loadData("m", "Zero");
-  Key mainAddArgs[] = {"n", "m"};
-  state.newApp("added", "add", 2, mainAddArgs);
+  state.newApp("added", "add", "n", "m");
   state.call("added", "added");
   state.returnSymbol("added");
 

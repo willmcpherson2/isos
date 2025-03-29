@@ -112,12 +112,30 @@ public:
     define(name, argAlloca);
   }
 
+  template <typename... Args> void newApp(Key name, Key var, Args... args) {
+    Key argsArray[] = {args...};
+    Arity length = sizeof...(Args);
+    newApp(name, var, length, argsArray);
+  }
+
   void newApp(Key name, Key var, Arity length, Key *args) {
     callApp(newAppFun, name, var, length, args);
   }
 
+  template <typename... Args> void newPartial(Key name, Key var, Args... args) {
+    Key argsArray[] = {args...};
+    Arity length = sizeof...(Args);
+    newPartial(name, var, length, argsArray);
+  }
+
   void newPartial(Key name, Key var, Arity length, Key *args) {
     callApp(newPartialFun, name, var, length, args);
+  }
+
+  template <typename... Args> void appPartial(Key name, Key var, Args... args) {
+    Key argsArray[] = {args...};
+    Arity length = sizeof...(Args);
+    appPartial(name, var, length, argsArray);
   }
 
   void appPartial(Key name, Key var, Arity length, Key *args) {
