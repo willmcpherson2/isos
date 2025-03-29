@@ -220,6 +220,69 @@ void testAdd() {
   TEST(run(state), 1);
 }
 
+void testMapMaybe() {
+  State<Key> state{};
+  CHECK(state);
+
+  // True
+  state.data("True", 0, 0);
+
+  // False
+  state.data("False", 1, 0);
+
+  // not True = False
+  // not False = True
+  state.function("not", "self", 3, 1);
+  state.loadArg("x", "self", 0);
+  state.freeArgs("self");
+  state.match("x");
+  state.arm(0);
+  state.loadData("False", "False");
+  state.returnTerm("False");
+  state.arm(1);
+  state.loadData("True", "True");
+  state.returnTerm("True");
+
+  // Just x
+  state.data("Just", 2, 1);
+
+  // Nothing
+  state.data("Nothing", 3, 0);
+
+  // map f (Just x) = Just (f x)
+  // map f Nothing = Nothing
+  state.function("map", "self", 4, 2);
+  state.loadArg("f", "self", 0);
+  state.loadArg("just", "self", 1);
+  state.freeArgs("self");
+  state.match("just");
+  state.arm(2);
+  state.loadData("Just", "Just");
+  state.loadArg("x", "just", 0);
+  state.freeArgs("just");
+  state.appPartial("result", "f", "x");
+  state.newApp("result", "Just", "result");
+  state.returnTerm("result");
+  state.arm(3);
+  state.loadData("Nothing", "Nothing");
+  state.returnTerm("Nothing");
+
+  // main = map not (Just True)
+  state.main();
+  state.loadData("map", "map");
+  state.loadData("not", "not");
+  state.loadData("Just", "Just");
+  state.loadData("True", "True");
+  state.newPartial("not", "not");
+  state.newApp("result", "Just", "True");
+  state.newApp("result", "map", "not", "result");
+  state.call("result", "result");
+  state.freeTerm("result");
+  state.returnSymbol("result");
+
+  TEST(run(state), 2);
+}
+
 void testNewApp() {
   Term foo{
     .fun = noop,
@@ -302,6 +365,7 @@ void testCompiler() {
   testNot();
   testAppPartial();
   testAdd();
+  testMapMaybe();
 }
 
 int main() {
