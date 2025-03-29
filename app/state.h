@@ -63,7 +63,8 @@ public:
     llvm::BasicBlock *block = llvm::BasicBlock::Create(context, "entry", fun);
     builder.emplace(block);
 
-    locals.clear();
+    clearLocals();
+    addScope();
   }
 
   void data(Key name, Symbol symbol, Arity arity) {
@@ -81,8 +82,9 @@ public:
     llvm::LoadInst *argLoad = builder->CreateLoad(termType, argument);
     llvm::AllocaInst *argAlloca = builder->CreateAlloca(termType, nullptr);
     builder->CreateStore(argLoad, argAlloca);
-    locals.clear();
-    locals.insert({argName, argAlloca});
+    clearLocals();
+    addScope();
+    define(argName, argAlloca);
 
     addGlobal(fun, name, symbol, arity);
   }
@@ -94,11 +96,11 @@ public:
     llvm::LoadInst *termLoad = builder->CreateLoad(termType, global);
     builder->CreateStore(termLoad, termAlloca);
 
-    locals.insert({name, termAlloca});
+    define(name, termAlloca);
   }
 
   void loadArg(Key name, Key var, Index i) {
-    llvm::AllocaInst *term = locals[var];
+    llvm::AllocaInst *term = lookup(var);
 
     llvm::LoadInst *termLoad = builder->CreateLoad(termType, term);
     llvm::Value *argsField = builder->CreateExtractValue(termLoad, 1);
@@ -109,7 +111,7 @@ public:
     llvm::AllocaInst *argAlloca = builder->CreateAlloca(termType, nullptr);
     builder->CreateStore(arg, argAlloca);
 
-    locals.insert({name, argAlloca});
+    define(name, argAlloca);
   }
 
   void newApp(Key name, Key var, Arity length, Key *args) {
@@ -126,13 +128,13 @@ public:
 
   void copy(Key name, Key var) {
     llvm::AllocaInst *dest = builder->CreateAlloca(termType, nullptr);
-    llvm::AllocaInst *src = locals[var];
+    llvm::AllocaInst *src = lookup(var);
     builder->CreateCall(copyFun, {dest, src});
-    locals.insert({name, dest});
+    define(name, dest);
   }
 
   void freeArgs(Key var) {
-    llvm::AllocaInst *term = locals[var];
+    llvm::AllocaInst *term = lookup(var);
 
     llvm::LoadInst *termLoad = builder->CreateLoad(termType, term);
     llvm::Value *argsField = builder->CreateExtractValue(termLoad, 1);
@@ -140,12 +142,12 @@ public:
   }
 
   void freeTerm(Key var) {
-    llvm::AllocaInst *term = locals[var];
+    llvm::AllocaInst *term = lookup(var);
     builder->CreateCall(freeTermFun, {term});
   }
 
   void call(Key name, Key var) {
-    llvm::AllocaInst *term = locals[var];
+    llvm::AllocaInst *term = lookup(var);
 
     llvm::LoadInst *termLoad = builder->CreateLoad(termType, term);
     llvm::Value *fun = builder->CreateExtractValue(termLoad, 0);
@@ -153,25 +155,25 @@ public:
     builder->CreateStore(termLoad, termAlloca);
     builder->CreateCall(funType, fun, {termAlloca});
 
-    locals.insert({name, termAlloca});
+    define(name, termAlloca);
   }
 
   void returnTerm(Key var) {
-    llvm::AllocaInst *term = locals[var];
+    llvm::AllocaInst *term = lookup(var);
     llvm::LoadInst *termLoad = builder->CreateLoad(termType, term);
     builder->CreateStore(termLoad, argument);
     builder->CreateRetVoid();
   }
 
   void returnSymbol(Key var) {
-    llvm::AllocaInst *term = locals[var];
+    llvm::AllocaInst *term = lookup(var);
     llvm::LoadInst *termLoad = builder->CreateLoad(termType, term);
     llvm::Value *symbol = builder->CreateExtractValue(termLoad, 2);
     builder->CreateRet(symbol);
   }
 
   void match(Key var) {
-    llvm::AllocaInst *term = locals[var];
+    llvm::AllocaInst *term = lookup(var);
     llvm::LoadInst *termLoad = builder->CreateLoad(termType, term);
     llvm::Value *symbol = builder->CreateExtractValue(termLoad, 2);
 
@@ -180,6 +182,8 @@ public:
     swit = builder->CreateSwitch(symbol, defaultArm, 0);
     builder->SetInsertPoint(defaultArm);
     builder->CreateUnreachable();
+
+    addScope();
   }
 
   void arm(Symbol symbol) {
@@ -188,6 +192,8 @@ public:
     llvm::BasicBlock *armBlock = llvm::BasicBlock::Create(context, "", fun);
     swit->addCase(symbolConstant, armBlock);
     builder->SetInsertPoint(armBlock);
+
+    clearScope();
   }
 
   void linkRuntime() {
@@ -322,11 +328,11 @@ private:
   llvm::Function *freeFun = nullptr;
   llvm::Function *freeTermFun = nullptr;
 
-  std::optional<llvm::IRBuilder<>> builder;
   std::unordered_map<Key, llvm::GlobalVariable *> globals;
   llvm::Function *fun = nullptr;
+  std::optional<llvm::IRBuilder<>> builder;
   llvm::Argument *argument = nullptr;
-  std::unordered_map<Key, llvm::AllocaInst *> locals;
+  std::vector<std::unordered_map<Key, llvm::AllocaInst *>> locals;
   llvm::SwitchInst *swit = nullptr;
 
   std::unique_ptr<llvm::Module> initMod() {
@@ -462,7 +468,7 @@ private:
 
   void
   callApp(llvm::Function *fun, Key name, Key var, Arity length, Key *args) {
-    llvm::AllocaInst *term = locals[var];
+    llvm::AllocaInst *term = lookup(var);
 
     llvm::LoadInst *termLoad = builder->CreateLoad(termType, term);
     llvm::AllocaInst *termAlloca = builder->CreateAlloca(termType, nullptr);
@@ -475,7 +481,7 @@ private:
     llvm::AllocaInst *argsAlloca = builder->CreateAlloca(argsType, nullptr);
     for (Index i = 0; i < length; ++i) {
       Key arg = args[i];
-      llvm::AllocaInst *argLocal = locals[arg];
+      llvm::AllocaInst *argLocal = lookup(arg);
       llvm::LoadInst *argLoad = builder->CreateLoad(termType, argLocal);
       llvm::Value *argGep = builder->CreateGEP(
         argsType,
@@ -492,7 +498,7 @@ private:
     argValues.push_back(argsAlloca);
     builder->CreateCall(fun, argValues);
 
-    locals.insert({name, termAlloca});
+    define(name, termAlloca);
   }
 
   void addGlobal(llvm::Function *fun, Key name, Symbol symbol, Arity arity) {
@@ -519,7 +525,29 @@ private:
       false                              // isExternallyInitialized
     );
 
-    globals.insert({name, global});
+    globals[name] = global;
+  }
+
+  void clearLocals() { locals.clear(); }
+
+  void addScope() { locals.emplace_back(); }
+
+  void clearScope() { locals.back().clear(); }
+
+  void define(Key key, llvm::AllocaInst *local) { locals.back()[key] = local; }
+
+  llvm::AllocaInst *lookup(Key key) {
+    for (auto scope = locals.rbegin(); scope != locals.rend(); ++scope) {
+      auto local = scope->find(key);
+      if (local != scope->end()) {
+        llvm::AllocaInst *value = local->second;
+        return value;
+      }
+    }
+
+    std::stringstream stream;
+    stream << "no local with key: " << key;
+    throw std::out_of_range(stream.str());
   }
 };
 

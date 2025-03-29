@@ -42,8 +42,8 @@ void testReturnSymbol() {
 
   // main = True
   state.main();
-  state.loadData("true", "True");
-  state.returnSymbol("true");
+  state.loadData("True", "True");
+  state.returnSymbol("True");
 
   TEST(run(state), 1);
 }
@@ -78,16 +78,16 @@ void testIdentity() {
   state.function("id", "self", 1, 1);
   state.loadArg("x", "self", 0);
   state.freeArgs("self");
-  state.call("result", "x");
-  state.returnTerm("result");
+  state.call("x", "x");
+  state.returnTerm("x");
 
   // main = id True
   state.main();
   state.loadData("id", "id");
   state.loadData("True", "True");
   Key args[] = {"True"};
-  state.newApp("x", "id", 1, args);
-  state.call("result", "x");
+  state.newApp("result", "id", 1, args);
+  state.call("result", "result");
   state.returnSymbol("result");
 
   TEST(run(state), 1);
@@ -141,8 +141,8 @@ void testNot() {
   state.loadData("not", "not");
   state.loadData("True", "True");
   Key args[] = {"True"};
-  state.newApp("x", "not", 1, args);
-  state.call("result", "x");
+  state.newApp("result", "not", 1, args);
+  state.call("result", "result");
   state.returnSymbol("result");
 
   TEST(run(state), 2);
@@ -159,8 +159,8 @@ void testAppPartial() {
   state.function("id", "self", 1, 1);
   state.loadArg("x", "self", 0);
   state.freeArgs("self");
-  state.call("result", "x");
-  state.returnTerm("result");
+  state.call("x", "x");
+  state.returnTerm("x");
 
   // f = id
   // x = f True
@@ -170,8 +170,8 @@ void testAppPartial() {
   state.newPartial("f", "id", 0, nullptr);
   Key args[] = {"True"};
   state.appPartial("x", "f", 1, args);
-  state.call("result", "x");
-  state.returnSymbol("result");
+  state.call("x", "x");
+  state.returnSymbol("x");
 
   TEST(run(state), 1);
 }
@@ -189,15 +189,15 @@ void testAdd() {
   // add Zero m = m
   // add (Succ n) m = Succ (add n m)
   state.function("add", "self", 2, 2);
-  state.loadArg("succN", "self", 0);
+  state.loadArg("n", "self", 0);
   state.loadArg("m", "self", 1);
   state.freeArgs("self");
-  state.match("succN");
+  state.match("n");
   state.arm(0);
-  state.call("evalM", "m");
-  state.returnTerm("evalM");
+  state.call("m", "m");
+  state.returnTerm("m");
   state.arm(1);
-  state.loadArg("n", "succN", 0);
+  state.loadArg("n", "n", 0);
   state.loadData("Succ", "Succ");
   state.loadData("add", "add");
   Key addArgs[] = {"n", "m"};
@@ -213,8 +213,8 @@ void testAdd() {
   state.loadData("m", "Zero");
   Key mainAddArgs[] = {"n", "m"};
   state.newApp("added", "add", 2, mainAddArgs);
-  state.call("evalAdded", "added");
-  state.returnSymbol("evalAdded");
+  state.call("added", "added");
+  state.returnSymbol("added");
 
   TEST(run(state), 0);
 }
